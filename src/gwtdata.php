@@ -146,13 +146,13 @@ class GWTdata
     }
 
     /**
-     *  Sets daterange for download data.
+     *  Sets date range for download data.
      *
      * @param string $dateStart ISO 8601 formatted date string
      * @param string $dateEnd ISO 8601 formatted date string
      * @return $this
      */
-    public function setDaterange($dateStart, $dateEnd)
+    public function setDateRange($dateStart, $dateEnd)
     {
         if (!$this->isISO8601($dateStart) || !$this->isISO8601($dateEnd)) {
             throw new Exception('Date should be in ISO 8601 format.');
@@ -255,7 +255,7 @@ class GWTdata
         if ($this->isLoggedIn() === true) {
             $url = self::HOST . $url;
             $head = array(
-                'Authorization: GoogleLogin auth='.$this->_auth,
+                'Authorization: GoogleLogin auth=' . $this->_auth,
                 'GData-Version: 2'
             );
             $ch = curl_init();
@@ -271,9 +271,9 @@ class GWTdata
             curl_close($ch);
 
             return ($info['http_code']!=200) ? false : $result;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -285,7 +285,7 @@ class GWTdata
     public function getSites()
     {
         if ($this->isLoggedIn() === true) {
-            $feed = self::GetData(self::SERVICEURI.'feeds/sites/');
+            $feed = $this->getData(self::SERVICEURI . 'feeds/sites/');
             if ($feed !== false) {
                 $sites = array();
                 $doc = new DOMDocument();
@@ -296,13 +296,14 @@ class GWTdata
                         $node->getElementsByTagName('title')->item(0)->nodeValue
                     );
                 }
+
                 return $sites;
             } else {
                 return false;
             }
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -322,10 +323,11 @@ class GWTdata
                 urlencode($url)
             );
             $downloadList = $this->getData($_url);
+
             return json_decode($downloadList, true);
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -338,40 +340,40 @@ class GWTdata
     public function downloadCSV($site, $savepath='.')
     {
         if ($this->isLoggedIn() === true) {
-            $downloadUrls = s$this->getDownloadUrls($site);
+            $downloadUrls = $this->getDownloadUrls($site);
             $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
             $tables = $this->_tables;
             foreach ($tables as $table) {
                 if ($table == 'CRAWL_ERRORS') {
-                    self::DownloadCSV_CrawlErrors($site, $savepath);
+                    $this->downloadCSV_CrawlErrors($site, $savepath);
                 } elseif ($table == 'CONTENT_ERRORS') {
-                    self::DownloadCSV_XTRA($site, $savepath,
+                    $this->downloadCSV_XTRA($site, $savepath,
                       'html-suggestions', '\)', 'CONTENT_ERRORS', 'content-problems-dl');
                 } elseif ($table == 'CONTENT_KEYWORDS') {
-                    self::DownloadCSV_XTRA($site, $savepath,
+                    $this->downloadCSV_XTRA($site, $savepath,
                       'keywords', '\)', 'CONTENT_KEYWORDS', 'content-words-dl');
                 } elseif ($table == 'INTERNAL_LINKS') {
-                    self::DownloadCSV_XTRA($site, $savepath,
+                    $this->downloadCSV_XTRA($site, $savepath,
                       'internal-links', '\)', 'INTERNAL_LINKS', 'internal-links-dl');
                 } elseif ($table=='EXTERNAL_LINKS') {
-                    self::DownloadCSV_XTRA($site, $savepath,
+                    $this->downloadCSV_XTRA($site, $savepath,
                       'external-links-domain', '\)', 'EXTERNAL_LINKS', 'external-links-domain-dl');
                 } elseif ($table=='SOCIAL_ACTIVITY') {
-                    self::DownloadCSV_XTRA($site, $savepath,
+                    $this->downloadCSV_XTRA($site, $savepath,
                       'social-activity', 'x26', 'SOCIAL_ACTIVITY', 'social-activity-dl');
                 } elseif ($table=='LATEST_BACKLINKS') {
-                    self::DownloadCSV_XTRA($site, $savepath,
+                    $this->downloadCSV_XTRA($site, $savepath,
                       'external-links-domain', '\)', 'LATEST_BACKLINKS', 'backlinks-latest-dl');
                 } else {
                     $finalName = "$savepath/$table-$filename.csv";
                     $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
                     $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
-                    $this->saveData($finalUrl,$finalName);
+                    $this->saveData($finalUrl, $finalName);
                 }
             }
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -392,9 +394,9 @@ class GWTdata
             $url = self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true';
             $_url = sprintf($url, $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd);
             $this->saveData($_url, $finalName);
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -453,9 +455,11 @@ class GWTdata
         $data = $this->getData($finalUrl);
         if (strlen($data) > 1 && file_put_contents($finalName, utf8_decode($data))) {
             array_push($this->_downloaded, realpath($finalName));
+
             return true;
         } else {
             array_push($this->_skipped, $finalName);
+
             return false;
         }
     }

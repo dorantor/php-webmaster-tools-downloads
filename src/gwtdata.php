@@ -44,11 +44,7 @@ class GWTdata
         $this->_logged_in = false;
         $this->_language = 'en';
         $this->_daterange = array('','');
-        $this->_tables = array('TOP_PAGES', 'TOP_QUERIES',
-            'CRAWL_ERRORS', 'CONTENT_ERRORS', 'CONTENT_KEYWORDS',
-            'INTERNAL_LINKS', 'EXTERNAL_LINKS', 'SOCIAL_ACTIVITY',
-            'LATEST_BACKLINKS'
-        );
+        $this->_tables = $this->getTables();
         $this->_errTablesSort = array(0 => 'http',
             1 => 'not-found', 2 => 'restricted-by-robotsTxt',
             3 => 'unreachable', 4 => 'timeout', 5 => 'not-followed',
@@ -63,36 +59,57 @@ class GWTdata
     }
 
     /**
+     * Get list of possible tables
+     *
+     * @return array
+     */
+    public function getTables()
+    {
+        return array(
+            'TOP_PAGES',
+            'TOP_QUERIES',
+            'CRAWL_ERRORS',
+            'CONTENT_ERRORS',
+            'CONTENT_KEYWORDS',
+            'INTERNAL_LINKS',
+            'EXTERNAL_LINKS',
+            'SOCIAL_ACTIVITY',
+            'LATEST_BACKLINKS',
+        );
+    }
+
+    /**
      *  Sets content language.
      *
      *  @param string $str Valid ISO 639-1 language code, supported by Google.
      */
-    public function SetLanguage($str)
+    public function setLanguage($str)
     {
         $this->_language = $str;
+
+        return $this;
     }
 
     /**
      *  Sets features that should be downloaded.
      *
-     *  @param array $arr        Valid array values are:
-     *                          'TOP_PAGES', 'TOP_QUERIES', 'CRAWL_ERRORS', 'CONTENT_ERRORS',
-     *                          'CONTENT_KEYWORDS', 'INTERNAL_LINKS', 'EXTERNAL_LINKS',
-     *                          'SOCIAL_ACTIVITY'.
+     *  @param array $arr For valid values see getTables() method
      */
-    public function SetTables($arr)
+    public function setTables(array $arr)
     {
-        if(is_array($arr) && !empty($arr) && sizeof($arr) <= 2) {
-            $valid = array('TOP_PAGES','TOP_QUERIES','CRAWL_ERRORS','CONTENT_ERRORS',
-              'CONTENT_KEYWORDS','INTERNAL_LINKS','EXTERNAL_LINKS','SOCIAL_ACTIVITY',
-              'LATEST_BACKLINKS');
+        if (!empty($arr) && sizeof($arr) <= 2) {
+            $valid = $this->getTables();
             $this->_tables = array();
-            for($i=0; $i < sizeof($arr); $i++) {
-                if(in_array($arr[$i], $valid)) {
+            for ($i=0; $i < sizeof($arr); $i++) {
+                if (in_array($arr[$i], $valid)) {
                     array_push($this->_tables, $arr[$i]);
-                } else { throw new Exception('Invalid argument given.'); }
+                } else {
+                    throw new Exception('Invalid argument given.');
+                }
             }
-        } else { throw new Exception('Invalid argument given.'); }
+        }
+
+        return $this;
     }
 
     /**
@@ -100,16 +117,22 @@ class GWTdata
      *
      *  @param array $arr        Array containing two ISO 8601 formatted date strings.
      */
-    public function SetDaterange($arr)
+    public function setDaterange(array $arr)
     {
-        if(is_array($arr) && !empty($arr) && sizeof($arr) == 2) {
-            if(self::IsISO8601($arr[0]) === true &&
-              self::IsISO8601($arr[1]) === true) {
-                $this->_daterange = array(str_replace('-', '', $arr[0]),
-                  str_replace('-', '', $arr[1]));
-                return true;
-            } else { throw new Exception('Invalid argument given.'); }
-        } else { throw new Exception('Invalid argument given.'); }
+        if (!empty($arr) && sizeof($arr) == 2) {
+            if (self::IsISO8601($arr[0]) === true &&
+              self::IsISO8601($arr[1]) === true)
+            {
+                $this->_daterange = array(
+                    str_replace('-', '', $arr[0]),
+                    str_replace('-', '', $arr[1])
+                );
+            } else {
+                throw new Exception('Invalid argument given.');
+            }
+        }
+
+        return $this;
     }
 
     /**
@@ -117,7 +140,7 @@ class GWTdata
      *
      *  @return  array   Array of filenames that have been written to disk.
      */
-    public function GetDownloadedFiles()
+    public function getDownloadedFiles()
     {
         return $this->_downloaded;
     }
@@ -127,7 +150,7 @@ class GWTdata
      *
      *  @return  array   Array of filenames that have been written to disk.
      */
-    public function GetSkippedFiles()
+    public function getSkippedFiles()
     {
         return $this->_skipped;
     }
@@ -135,9 +158,9 @@ class GWTdata
     /**
      *  Checks if client has logged into their Google account yet.
      *
-     *  @return Boolean  Returns true if logged in, or false if not.
+     *  @return boolean  Returns true if logged in, or false if not.
      */
-    private function IsLoggedIn()
+    private function isLoggedIn()
     {
         return $this->_logged_in;
     }
@@ -145,25 +168,24 @@ class GWTdata
     /**
      *  Attempts to log into the specified Google account.
      *
-     *  @param $email  String   User's Google email address.
-     *  @param $pwd    String   Password for Google account.
-     *  @return Boolean  Returns true when Authentication was successful,
-     *                   else false.
+     *  @param string $email     User's Google email address.
+     *  @param string $pwd       Password for Google account.
+     *  @return boolean          Login result
      */
-    public function LogIn($email, $pwd)
+    public function logIn($email, $pwd)
     {
         $url = self::HOST . '/accounts/ClientLogin';
         $postRequest = array(
-            'accountType' => 'HOSTED_OR_GOOGLE',
-            'Email' => $email,
-            'Passwd' => $pwd,
-            'service' => 'sitemaps',
-            'source' => 'Google-WMTdownloadscript-0.1-php'
+            'accountType'   => 'HOSTED_OR_GOOGLE',
+            'Email'         => $email,
+            'Passwd'        => $pwd,
+            'service'       => 'sitemaps',
+            'source'        => 'Google-WMTdownloadscript-0.1-php'
         );
 
         // Before PHP version 5.2.0 and when the first char of $pass is an @ symbol,
         // send data in CURLOPT_POSTFIELDS as urlencoded string.
-        if ('@' === (string)$pwd[0] || version_compare(PHP_VERSION, '5.2.0') < 0) {
+        if ('@' === (string) $pwd[0] || version_compare(PHP_VERSION, '5.2.0') < 0) {
             $postRequest = http_build_query($postRequest);
         }
 
@@ -178,26 +200,31 @@ class GWTdata
         $output = curl_exec($ch);
         $info = curl_getinfo($ch);
         curl_close($ch);
-        if($info['http_code'] == 200) {
+        if ($info['http_code'] == 200) {
             preg_match('/Auth=(.*)/', $output, $match);
-            if(isset($match[1])) {
+            if (isset($match[1])) {
                 $this->_auth = $match[1];
                 $this->_logged_in = true;
+
                 return true;
-            } else { return false; }
-        } else { return false; }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     /**
      *  Attempts authenticated GET Request.
      *
-     *  @param $url    String   URL for the GET request.
-     *  @return Mixed  Curl result as String,
+     *  @param string $url       URL for the GET request.
+     *  @return mixed  Curl result as String,
      *                 or false (Boolean) when Authentication fails.
      */
-    public function GetData($url)
+    public function getData($url)
     {
-        if(self::IsLoggedIn() === true) {
+        if (self::IsLoggedIn() === true) {
             $url = self::HOST . $url;
             $head = array('Authorization: GoogleLogin auth='.$this->_auth,
                 'GData-Version: 2');
@@ -213,110 +240,119 @@ class GWTdata
             $info = curl_getinfo($ch);
             curl_close($ch);
             return ($info['http_code']!=200) ? false : $result;
-        } else { return false; }
+        } else {
+            return false;
+        }
     }
 
     /**
      *  Gets all available sites from Google Webmaster Tools account.
      *
-     *  @return Mixed  Array with all site URLs registered in GWT account,
+     *  @return mixed  Array with all site URLs registered in GWT account,
      *                 or false (Boolean) if request failed.
      */
-    public function GetSites()
+    public function getSites()
     {
-        if(self::IsLoggedIn() === true) {
+        if (self::IsLoggedIn() === true) {
             $feed = self::GetData(self::SERVICEURI.'feeds/sites/');
-            if($feed !== false) {
+            if ($feed !== false) {
                 $sites = array();
                 $doc = new DOMDocument();
                 $doc->loadXML($feed);
                 foreach ($doc->getElementsByTagName('entry') as $node) {
-                    array_push($sites,
-                      $node->getElementsByTagName('title')->item(0)->nodeValue);
+                    array_push(
+                        $sites,
+                        $node->getElementsByTagName('title')->item(0)->nodeValue
+                    );
                 }
                 return $sites;
-            } else { return false; }
-        } else { return false; }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     /**
      *  Gets the download links for an available site
      *  from the Google Webmaster Tools account.
      *
-     *  @param $url    String   Site URL registered in GWT.
-     *  @return Mixed  Array with keys TOP_PAGES and TOP_QUERIES,
+     *  @param string $url       Site URL registered in GWT.
+     *  @return mixed  Array with keys TOP_PAGES and TOP_QUERIES,
      *                 or false (Boolean) when Authentication fails.
      */
-    public function GetDownloadUrls($url)
+    public function getDownloadUrls($url)
     {
-        if(self::IsLoggedIn() === true) {
-            $_url = sprintf(self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
-              $this->_language,
-              urlencode($url));
+        if (self::IsLoggedIn() === true) {
+            $_url = sprintf(
+                self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
+                $this->_language,
+                urlencode($url)
+            );
             $downloadList = self::GetData($_url);
             return json_decode($downloadList, true);
-        } else { return false; }
+        } else {
+            return false;
+        }
     }
 
     /**
-     *  Downloads the file based on the given URL.
+     * Downloads the file based on the given URL.
      *
-     *  @param $site    String   Site URL available in GWT Account.
-     *  @param $savepath  String   Optional path to save CSV to (no trailing slash!).
+     * @param string $site       Site URL available in GWT Account.
+     * @param string $savepath   Optional path to save CSV to (no trailing slash!).
+     * @param return bool
      */
     public function DownloadCSV($site, $savepath='.')
     {
-        if(self::IsLoggedIn() === true) {
+        if (self::IsLoggedIn() === true) {
             $downloadUrls = self::GetDownloadUrls($site);
             $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
             $tables = $this->_tables;
-            foreach($tables as $table) {
-                if($table=='CRAWL_ERRORS') {
+            foreach ($tables as $table) {
+                if ($table == 'CRAWL_ERRORS') {
                     self::DownloadCSV_CrawlErrors($site, $savepath);
-                }
-                elseif($table=='CONTENT_ERRORS') {
+                } elseif ($table == 'CONTENT_ERRORS') {
                     self::DownloadCSV_XTRA($site, $savepath,
                       'html-suggestions', '\)', 'CONTENT_ERRORS', 'content-problems-dl');
-                }
-                elseif($table=='CONTENT_KEYWORDS') {
+                } elseif ($table == 'CONTENT_KEYWORDS') {
                     self::DownloadCSV_XTRA($site, $savepath,
                       'keywords', '\)', 'CONTENT_KEYWORDS', 'content-words-dl');
-                }
-                elseif($table=='INTERNAL_LINKS') {
+                } elseif ($table == 'INTERNAL_LINKS') {
                     self::DownloadCSV_XTRA($site, $savepath,
                       'internal-links', '\)', 'INTERNAL_LINKS', 'internal-links-dl');
-                }
-                elseif($table=='EXTERNAL_LINKS') {
+                } elseif ($table=='EXTERNAL_LINKS') {
                     self::DownloadCSV_XTRA($site, $savepath,
                       'external-links-domain', '\)', 'EXTERNAL_LINKS', 'external-links-domain-dl');
-                }
-                elseif($table=='SOCIAL_ACTIVITY') {
+                } elseif ($table=='SOCIAL_ACTIVITY') {
                     self::DownloadCSV_XTRA($site, $savepath,
                       'social-activity', 'x26', 'SOCIAL_ACTIVITY', 'social-activity-dl');
-                }
-                elseif($table=='LATEST_BACKLINKS') {
+                } elseif ($table=='LATEST_BACKLINKS') {
                     self::DownloadCSV_XTRA($site, $savepath,
                       'external-links-domain', '\)', 'LATEST_BACKLINKS', 'backlinks-latest-dl');
-                }
-                else {
+                } else {
                     $finalName = "$savepath/$table-$filename.csv";
                     $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
                     $finalUrl = sprintf($finalUrl, $this->_daterange[0], $this->_daterange[1]);
                     self::SaveData($finalUrl,$finalName);
                 }
             }
-        } else { return false; }
+        } else {
+            return false;
+        }
     }
 
     /**
      *  Downloads "unofficial" downloads based on the given URL.
      *
-     *  @param $site    String   Site URL available in GWT Account.
-     *  @param $savepath  String   Optional path to save CSV to (no trailing slash!).
+     * @param string $site       Site URL available in GWT Account.
+     * @param string $savepath   Optional path to save CSV to (no trailing slash!).
+     * @return bool
      */
-    public function DownloadCSV_XTRA($site, $savepath='.', $tokenUri, $tokenDelimiter, $filenamePrefix, $dlUri)
+    public function downloadCSV_XTRA($site, $savepath='.', $tokenUri, $tokenDelimiter, $filenamePrefix, $dlUri)
     {
-        if(self::IsLoggedIn() === true) {
+        if (self::IsLoggedIn() === true) {
             $uri = self::SERVICEURI . $tokenUri . '?hl=%s&siteUrl=%s';
             $_uri = sprintf($uri, $this->_language, $site);
             $token = self::GetToken($_uri, $tokenDelimiter, $dlUri);
@@ -324,27 +360,30 @@ class GWTdata
             $finalName = "$savepath/$filenamePrefix-$filename.csv";
             $url = self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true';
             $_url = sprintf($url, $this->_language, $site, $token, $this->_daterange[0], $this->_daterange[1]);
-            self::SaveData($_url,$finalName);
-        } else { return false; }
+            self::SaveData($_url, $finalName);
+        } else {
+            return false;
+        }
     }
 
     /**
-     *  Downloads the Crawl Errors file based on the given URL.
+     * Downloads the Crawl Errors file based on the given URL.
      *
-     *  @param $site    String   Site URL available in GWT Account.
-     *  @param $savepath  String   Optional: Path to save CSV to (no trailing slash!).
-     *  @param $separated Boolean  Optional: If true, the method saves separated CSV files
+     * @param string $site      Site URL available in GWT Account.
+     * @param string $savepath  Optional: Path to save CSV to (no trailing slash!).
+     * @param bool $separated   Optional: If true, the method saves separated CSV files
      *                             for each error type. Default: Merge errors in one file.
+     * @return bool
      */
-    public function DownloadCSV_CrawlErrors($site, $savepath='.', $separated=false)
+    public function downloadCSV_CrawlErrors($site, $savepath='.', $separated=false)
     {
-        if(self::IsLoggedIn() === true) {
+        if (self::IsLoggedIn() === true) {
             $type_param = 'we';
             $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
-            if($separated) {
-                foreach($this->_errTablesSort as $sortid => $sortname) {
-                    foreach($this->_errTablesType as $typeid => $typename) {
-                        if($typeid == 1) {
+            if ($separated) {
+                foreach ($this->_errTablesSort as $sortid => $sortname) {
+                    foreach ($this->_errTablesType as $typeid => $typename) {
+                        if ($typeid == 1) {
                             $type_param = 'mx';
                         } else if($typeid == 2) {
                             $type_param = 'mc';
@@ -359,8 +398,7 @@ class GWTdata
                         self::SaveData($_url,$finalName);
                     }
                 }
-            }
-            else {
+            } else {
                 $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
                 $token = self::GetToken($uri,'x26');
                 $finalName = "$savepath/CRAWL_ERRORS-$filename.csv";
@@ -368,19 +406,21 @@ class GWTdata
                 $_url = sprintf($url, $this->_language, $site, $token);
                 self::SaveData($_url,$finalName);
             }
-        } else { return false; }
+        } else {
+            return false;
+        }
     }
 
     /**
      *  Saves data to a CSV file based on the given URL.
      *
-     *  @param $finalUrl   String   CSV Download URI.
-     *  @param $finalName  String   Filepointer to save location.
+     *  @param string $finalUrl      CSV Download URI.
+     *  @param string $finalName     Filepointer to save location.
      */
-    private function SaveData($finalUrl, $finalName)
+    private function saveData($finalUrl, $finalName)
     {
         $data = self::GetData($finalUrl);
-        if(strlen($data) > 1 && file_put_contents($finalName, utf8_decode($data))) {
+        if (strlen($data) > 1 && file_put_contents($finalName, utf8_decode($data))) {
             array_push($this->_downloaded, realpath($finalName));
             return true;
         } else {
@@ -392,11 +432,11 @@ class GWTdata
     /**
      *  Regular Expression to find the Security Token for a download file.
      *
-     *  @param $uri        String   A Webmaster Tools Desktop Service URI.
-     *  @param $delimiter  String   Trailing delimiter for the regex.
-     *  @return  String    Returns a security token.
+     *  @param string $uri           A Webmaster Tools Desktop Service URI.
+     *  @param string $delimiter     Trailing delimiter for the regex.
+     *  @return string    Security token.
      */
-    private function GetToken($uri, $delimiter, $dlUri='')
+    private function getToken($uri, $delimiter, $dlUri='')
     {
         $matches = array();
         $tmp = self::GetData($uri);
@@ -407,13 +447,22 @@ class GWTdata
     /**
      *  Validates ISO 8601 date format.
      *
-     *  @param $str      String   Valid ISO 8601 date string (eg. 2012-01-01).
-     *  @return  Boolean   Returns true if string has valid format, else false.
+     *  @param string $str         Valid ISO 8601 date string (eg. 2012-01-01).
+     *  @return  bool   Returns true if string has valid format, else false.
      */
-    private function IsISO8601($str)
+    private function isISO8601($str)
     {
         $stamp = strtotime($str);
-        return (is_numeric($stamp) && checkdate(date('m', $stamp),
-              date('d', $stamp), date('Y', $stamp))) ? true : false;
+        return (
+                is_numeric($stamp)
+                && checkdate(
+                    date('m', $stamp),
+                    date('d', $stamp),
+                    date('Y', $stamp)
+                )
+            )
+            ? true
+            : false
+        ;
     }
 }

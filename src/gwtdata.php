@@ -473,22 +473,20 @@ class GWTdata
     /**
      *  Validates ISO 8601 date format.
      *
-     *  @param string $str         Valid ISO 8601 date string (eg. 2012-01-01).
-     *  @return  bool   Returns true if string has valid format, else false.
+     *  @param string $str  Valid ISO 8601 date string (eg. 2012-01-01).
+     *  @return  bool       Returns true if string has valid format, else false.
      */
     private function isISO8601($str)
     {
         $stamp = strtotime($str);
+
         return (
-                is_numeric($stamp)
-                && checkdate(
-                    date('m', $stamp),
-                    date('d', $stamp),
-                    date('Y', $stamp)
-                )
+            is_numeric($stamp)
+            && checkdate(
+                date('m', $stamp),
+                date('d', $stamp),
+                date('Y', $stamp)
             )
-            ? true
-            : false
-        ;
+        );
     }
 }

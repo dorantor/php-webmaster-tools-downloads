@@ -46,7 +46,7 @@ class GWTdata
     public function __construct()
     {
         $this->_daterange = array('','');
-        $this->_tables = $this->getTables();
+        $this->_tables = $this->getAllowedTableNames();
     }
 
     /**
@@ -54,7 +54,7 @@ class GWTdata
      *
      * @return array
      */
-    public function getTables()
+    public function getAllowedTableNames()
     {
         return array(
             'TOP_PAGES',
@@ -119,13 +119,13 @@ class GWTdata
     /**
      * Sets features that should be downloaded.
      *
-     * @param array $tables For valid values see getTables() method
+     * @param array $tables For valid values see getAllowedTableNames() method
      * @return $this
      */
     public function setTables(array $tables)
     {
         $this->_tables = array_intersect(
-            $this->getTables(),
+            $this->getAllowedTableNames(),
             $tables
         );
 

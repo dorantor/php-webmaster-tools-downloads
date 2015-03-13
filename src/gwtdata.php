@@ -45,15 +45,6 @@ class GWTdata
         $this->_language = 'en';
         $this->_daterange = array('','');
         $this->_tables = $this->getTables();
-        $this->_errTablesSort = array(0 => 'http',
-            1 => 'not-found', 2 => 'restricted-by-robotsTxt',
-            3 => 'unreachable', 4 => 'timeout', 5 => 'not-followed',
-            'kAppErrorSoft-404s' => 'soft404', 'sitemap' => 'in-sitemaps'
-        );
-        $this->_errTablesType = array(0 => 'web-crawl-errors',
-            1 => 'mobile-wml-xhtml-errors', 2 => 'mobile-chtml-errors',
-            3 => 'mobile-operator-errors', 4 => 'news-crawl-errors'
-        );
         $this->_downloaded = array();
         $this->_skipped = array();
     }
@@ -75,6 +66,41 @@ class GWTdata
             'EXTERNAL_LINKS',
             'SOCIAL_ACTIVITY',
             'LATEST_BACKLINKS',
+        );
+    }
+
+    /**
+     * Get errors list
+     *
+     * @return array
+     */
+    private function getErrTablesSort()
+    {
+        return array(
+            0 => 'http',
+            1 => 'not-found',
+            2 => 'restricted-by-robotsTxt',
+            3 => 'unreachable',
+            4 => 'timeout',
+            5 => 'not-followed',
+            'kAppErrorSoft-404s' => 'soft404',
+            'sitemap' => 'in-sitemaps',
+        );
+    }
+
+    /**
+     * Get error types
+     *
+     * @return array
+     */
+    private function getErrTableTypes()
+    {
+        return array(
+            0 => 'web-crawl-errors',
+            1 => 'mobile-wml-xhtml-errors',
+            2 => 'mobile-chtml-errors',
+            3 => 'mobile-operator-errors',
+            4 => 'news-crawl-errors',
         );
     }
 
@@ -381,8 +407,8 @@ class GWTdata
             $type_param = 'we';
             $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
             if ($separated) {
-                foreach ($this->_errTablesSort as $sortid => $sortname) {
-                    foreach ($this->_errTablesType as $typeid => $typename) {
+                foreach ($this->getErrTablesSort() as $sortid => $sortname) {
+                    foreach ($this->getErrTableTypes() as $typeid => $typename) {
                         if ($typeid == 1) {
                             $type_param = 'mx';
                         } else if($typeid == 2) {

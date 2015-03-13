@@ -141,22 +141,19 @@ class GWTdata
     /**
      *  Sets daterange for download data.
      *
-     *  @param array $arr        Array containing two ISO 8601 formatted date strings.
+     * @param string $dateStart ISO 8601 formatted date string
+     * @param string $dateEnd ISO 8601 formatted date string
      */
-    public function setDaterange(array $arr)
+    public function setDaterange($dateStart, $dateEnd)
     {
-        if (!empty($arr) && sizeof($arr) == 2) {
-            if (self::IsISO8601($arr[0]) === true &&
-              self::IsISO8601($arr[1]) === true)
-            {
-                $this->_daterange = array(
-                    str_replace('-', '', $arr[0]),
-                    str_replace('-', '', $arr[1])
-                );
-            } else {
-                throw new Exception('Invalid argument given.');
-            }
+        if (!$this->isISO8601($dateStart) || !$this->isISO8601($dateEnd)) {
+            throw new Exception('Date should be in ISO 8601 format.');
         }
+
+        $this->_daterange = array(
+            str_replace('-', '', $dateStart),
+            str_replace('-', '', $dateEnd)
+        );
 
         return $this;
     }

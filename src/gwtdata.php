@@ -117,23 +117,17 @@ class GWTdata
     }
 
     /**
-     *  Sets features that should be downloaded.
+     * Sets features that should be downloaded.
      *
-     *  @param array $arr For valid values see getTables() method
+     * @param array $tables For valid values see getTables() method
+     * @return $this
      */
-    public function setTables(array $arr)
+    public function setTables(array $tables)
     {
-        if (!empty($arr) && sizeof($arr) <= 2) {
-            $valid = $this->getTables();
-            $this->_tables = array();
-            for ($i=0; $i < sizeof($arr); $i++) {
-                if (in_array($arr[$i], $valid)) {
-                    array_push($this->_tables, $arr[$i]);
-                } else {
-                    throw new Exception('Invalid argument given.');
-                }
-            }
-        }
+        $this->_tables = array_intersect(
+            $this->getTables(),
+            $tables
+        );
 
         return $this;
     }

@@ -33,7 +33,6 @@ class GWTdata
     public $_language, $_tables, $_daterange, $_downloaded, $_skipped;
     private $_auth, $_logged_in;
 
-
     /**
      * Constructor
      *
@@ -43,21 +42,21 @@ class GWTdata
     {
         $this->_auth = false;
         $this->_logged_in = false;
-        $this->_language = "en";
-        $this->_daterange = array("","");
-        $this->_tables = array("TOP_PAGES", "TOP_QUERIES",
-            "CRAWL_ERRORS", "CONTENT_ERRORS", "CONTENT_KEYWORDS",
-            "INTERNAL_LINKS", "EXTERNAL_LINKS", "SOCIAL_ACTIVITY",
-            "LATEST_BACKLINKS"
+        $this->_language = 'en';
+        $this->_daterange = array('','');
+        $this->_tables = array('TOP_PAGES', 'TOP_QUERIES',
+            'CRAWL_ERRORS', 'CONTENT_ERRORS', 'CONTENT_KEYWORDS',
+            'INTERNAL_LINKS', 'EXTERNAL_LINKS', 'SOCIAL_ACTIVITY',
+            'LATEST_BACKLINKS'
         );
-        $this->_errTablesSort = array(0 => "http",
-            1 => "not-found", 2 => "restricted-by-robotsTxt",
-            3 => "unreachable", 4 => "timeout", 5 => "not-followed",
-            "kAppErrorSoft-404s" => "soft404", "sitemap" => "in-sitemaps"
+        $this->_errTablesSort = array(0 => 'http',
+            1 => 'not-found', 2 => 'restricted-by-robotsTxt',
+            3 => 'unreachable', 4 => 'timeout', 5 => 'not-followed',
+            'kAppErrorSoft-404s' => 'soft404', 'sitemap' => 'in-sitemaps'
         );
-        $this->_errTablesType = array(0 => "web-crawl-errors",
-            1 => "mobile-wml-xhtml-errors", 2 => "mobile-chtml-errors",
-            3 => "mobile-operator-errors", 4 => "news-crawl-errors"
+        $this->_errTablesType = array(0 => 'web-crawl-errors',
+            1 => 'mobile-wml-xhtml-errors', 2 => 'mobile-chtml-errors',
+            3 => 'mobile-operator-errors', 4 => 'news-crawl-errors'
         );
         $this->_downloaded = array();
         $this->_skipped = array();
@@ -77,23 +76,23 @@ class GWTdata
      *  Sets features that should be downloaded.
      *
      *  @param array $arr        Valid array values are:
-     *                          "TOP_PAGES", "TOP_QUERIES", "CRAWL_ERRORS", "CONTENT_ERRORS",
-     *                          "CONTENT_KEYWORDS", "INTERNAL_LINKS", "EXTERNAL_LINKS",
-     *                          "SOCIAL_ACTIVITY".
+     *                          'TOP_PAGES', 'TOP_QUERIES', 'CRAWL_ERRORS', 'CONTENT_ERRORS',
+     *                          'CONTENT_KEYWORDS', 'INTERNAL_LINKS', 'EXTERNAL_LINKS',
+     *                          'SOCIAL_ACTIVITY'.
      */
     public function SetTables($arr)
     {
         if(is_array($arr) && !empty($arr) && sizeof($arr) <= 2) {
-            $valid = array("TOP_PAGES","TOP_QUERIES","CRAWL_ERRORS","CONTENT_ERRORS",
-              "CONTENT_KEYWORDS","INTERNAL_LINKS","EXTERNAL_LINKS","SOCIAL_ACTIVITY",
-              "LATEST_BACKLINKS");
+            $valid = array('TOP_PAGES','TOP_QUERIES','CRAWL_ERRORS','CONTENT_ERRORS',
+              'CONTENT_KEYWORDS','INTERNAL_LINKS','EXTERNAL_LINKS','SOCIAL_ACTIVITY',
+              'LATEST_BACKLINKS');
             $this->_tables = array();
             for($i=0; $i < sizeof($arr); $i++) {
                 if(in_array($arr[$i], $valid)) {
                     array_push($this->_tables, $arr[$i]);
-                } else { throw new Exception("Invalid argument given."); }
+                } else { throw new Exception('Invalid argument given.'); }
             }
-        } else { throw new Exception("Invalid argument given."); }
+        } else { throw new Exception('Invalid argument given.'); }
     }
 
     /**
@@ -106,11 +105,11 @@ class GWTdata
         if(is_array($arr) && !empty($arr) && sizeof($arr) == 2) {
             if(self::IsISO8601($arr[0]) === true &&
               self::IsISO8601($arr[1]) === true) {
-                $this->_daterange = array(str_replace("-", "", $arr[0]),
-                  str_replace("-", "", $arr[1]));
+                $this->_daterange = array(str_replace('-', '', $arr[0]),
+                  str_replace('-', '', $arr[1]));
                 return true;
-            } else { throw new Exception("Invalid argument given."); }
-        } else { throw new Exception("Invalid argument given."); }
+            } else { throw new Exception('Invalid argument given.'); }
+        } else { throw new Exception('Invalid argument given.'); }
     }
 
     /**

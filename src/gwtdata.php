@@ -247,10 +247,12 @@ class GWTdata
      */
     public function getData($url)
     {
-        if (self::IsLoggedIn() === true) {
+        if ($this->isLoggedIn() === true) {
             $url = self::HOST . $url;
-            $head = array('Authorization: GoogleLogin auth='.$this->_auth,
-                'GData-Version: 2');
+            $head = array(
+                'Authorization: GoogleLogin auth='.$this->_auth,
+                'GData-Version: 2'
+            );
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -262,6 +264,7 @@ class GWTdata
             $result = curl_exec($ch);
             $info = curl_getinfo($ch);
             curl_close($ch);
+
             return ($info['http_code']!=200) ? false : $result;
         } else {
             return false;
@@ -276,7 +279,7 @@ class GWTdata
      */
     public function getSites()
     {
-        if (self::IsLoggedIn() === true) {
+        if ($this->isLoggedIn() === true) {
             $feed = self::GetData(self::SERVICEURI.'feeds/sites/');
             if ($feed !== false) {
                 $sites = array();
@@ -307,13 +310,13 @@ class GWTdata
      */
     public function getDownloadUrls($url)
     {
-        if (self::IsLoggedIn() === true) {
+        if ($this->isLoggedIn() === true) {
             $_url = sprintf(
                 self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
                 $this->_language,
                 urlencode($url)
             );
-            $downloadList = self::GetData($_url);
+            $downloadList = $this->getData($_url);
             return json_decode($downloadList, true);
         } else {
             return false;
@@ -327,10 +330,10 @@ class GWTdata
      * @param string $savepath   Optional path to save CSV to (no trailing slash!).
      * @param return bool
      */
-    public function DownloadCSV($site, $savepath='.')
+    public function downloadCSV($site, $savepath='.')
     {
-        if (self::IsLoggedIn() === true) {
-            $downloadUrls = self::GetDownloadUrls($site);
+        if ($this->isLoggedIn() === true) {
+            $downloadUrls = s$this->getDownloadUrls($site);
             $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
             $tables = $this->_tables;
             foreach ($tables as $table) {
@@ -358,7 +361,7 @@ class GWTdata
                     $finalName = "$savepath/$table-$filename.csv";
                     $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
                     $finalUrl = sprintf($finalUrl, $this->_daterange[0], $this->_daterange[1]);
-                    self::SaveData($finalUrl,$finalName);
+                    $this->saveData($finalUrl,$finalName);
                 }
             }
         } else {
@@ -375,15 +378,15 @@ class GWTdata
      */
     public function downloadCSV_XTRA($site, $savepath='.', $tokenUri, $tokenDelimiter, $filenamePrefix, $dlUri)
     {
-        if (self::IsLoggedIn() === true) {
+        if ($this->isLoggedIn() === true) {
             $uri = self::SERVICEURI . $tokenUri . '?hl=%s&siteUrl=%s';
             $_uri = sprintf($uri, $this->_language, $site);
-            $token = self::GetToken($_uri, $tokenDelimiter, $dlUri);
+            $token = $this->getToken($_uri, $tokenDelimiter, $dlUri);
             $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
             $finalName = "$savepath/$filenamePrefix-$filename.csv";
             $url = self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true';
             $_url = sprintf($url, $this->_language, $site, $token, $this->_daterange[0], $this->_daterange[1]);
-            self::SaveData($_url, $finalName);
+            $this->saveData($_url, $finalName);
         } else {
             return false;
         }
@@ -400,7 +403,7 @@ class GWTdata
      */
     public function downloadCSV_CrawlErrors($site, $savepath='.', $separated=false)
     {
-        if (self::IsLoggedIn() === true) {
+        if ($this->isLoggedIn() === true) {
             $type_param = 'we';
             $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
             if ($separated) {
@@ -414,20 +417,20 @@ class GWTdata
                             $type_param = 'we';
                         }
                         $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
-                        $token = self::GetToken($uri,'x26');
+                        $token = $this->getToken($uri,'x26');
                         $finalName = "$savepath/CRAWL_ERRORS-$typename-$sortname-$filename.csv";
                         $url = self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s';
                         $_url = sprintf($url, $this->_language, $site, $token, $typeid, $sortid);
-                        self::SaveData($_url,$finalName);
+                        $this->saveData($_url,$finalName);
                     }
                 }
             } else {
                 $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
-                $token = self::GetToken($uri,'x26');
+                $token = $this->getToken($uri,'x26');
                 $finalName = "$savepath/CRAWL_ERRORS-$filename.csv";
                 $url = self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0';
                 $_url = sprintf($url, $this->_language, $site, $token);
-                self::SaveData($_url,$finalName);
+                $this->saveData($_url,$finalName);
             }
         } else {
             return false;
@@ -442,7 +445,7 @@ class GWTdata
      */
     private function saveData($finalUrl, $finalName)
     {
-        $data = self::GetData($finalUrl);
+        $data = $this->getData($finalUrl);
         if (strlen($data) > 1 && file_put_contents($finalName, utf8_decode($data))) {
             array_push($this->_downloaded, realpath($finalName));
             return true;
@@ -462,7 +465,7 @@ class GWTdata
     private function getToken($uri, $delimiter, $dlUri='')
     {
         $matches = array();
-        $tmp = self::GetData($uri);
+        $tmp = $this->getData($uri);
         preg_match_all("#$dlUri.*?46security_token(.*?)$delimiter#si", $tmp, $matches);
         return isset($matches[1][0]) ? substr($matches[1][0],3,-1) : '';
     }

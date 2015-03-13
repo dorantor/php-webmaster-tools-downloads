@@ -32,7 +32,21 @@ class GWTdata
 
     public $_language = 'en';
     public $_tables;
-    public $_daterange;
+
+    /**
+     * Date for start of date range
+     *
+     * @var string
+     */
+    protected $_dateStart;
+
+    /**
+     * Date for end of date range
+     *
+     * @var string
+     */
+    protected $_dateEnd;
+
     public $_downloaded = array();
     public $_skipped = array();
     private $_auth = false;
@@ -45,7 +59,6 @@ class GWTdata
      */
     public function __construct()
     {
-        $this->_daterange = array('','');
         $this->_tables = $this->getAllowedTableNames();
     }
 
@@ -137,17 +150,15 @@ class GWTdata
      *
      * @param string $dateStart ISO 8601 formatted date string
      * @param string $dateEnd ISO 8601 formatted date string
+     * @return $this
      */
     public function setDaterange($dateStart, $dateEnd)
     {
         if (!$this->isISO8601($dateStart) || !$this->isISO8601($dateEnd)) {
             throw new Exception('Date should be in ISO 8601 format.');
         }
-
-        $this->_daterange = array(
-            str_replace('-', '', $dateStart),
-            str_replace('-', '', $dateEnd)
-        );
+        $this->_dateStart   =  str_replace('-', '', $dateStart);
+        $this->_dateEnd     =  str_replace('-', '', $dateEnd);
 
         return $this;
     }
@@ -354,7 +365,7 @@ class GWTdata
                 } else {
                     $finalName = "$savepath/$table-$filename.csv";
                     $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
-                    $finalUrl = sprintf($finalUrl, $this->_daterange[0], $this->_daterange[1]);
+                    $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
                     $this->saveData($finalUrl,$finalName);
                 }
             }
@@ -379,7 +390,7 @@ class GWTdata
             $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
             $finalName = "$savepath/$filenamePrefix-$filename.csv";
             $url = self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true';
-            $_url = sprintf($url, $this->_language, $site, $token, $this->_daterange[0], $this->_daterange[1]);
+            $_url = sprintf($url, $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd);
             $this->saveData($_url, $finalName);
         } else {
             return false;

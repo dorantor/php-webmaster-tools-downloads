@@ -49,8 +49,13 @@ class GWTdata
 
     public $_downloaded = array();
     public $_skipped = array();
+
+    /**
+     * After successful login will contain auth key
+     *
+     * @var mixed
+     */
     private $_auth = false;
-    private $_logged_in = false;
 
     /**
      * Constructor
@@ -190,7 +195,7 @@ class GWTdata
      */
     private function isLoggedIn()
     {
-        return $this->_logged_in;
+        return (bool) $this->_auth;
     }
 
     /**
@@ -232,7 +237,6 @@ class GWTdata
             preg_match('/Auth=(.*)/', $output, $match);
             if (isset($match[1])) {
                 $this->_auth = $match[1];
-                $this->_logged_in = true;
 
                 return true;
             } else {
@@ -337,11 +341,11 @@ class GWTdata
      * @param string $savepath   Optional path to save CSV to (no trailing slash!).
      * @param return bool
      */
-    public function downloadCSV($site, $savepath='.')
+    public function downloadCSV($site, $savepath = '.')
     {
         if ($this->isLoggedIn() === true) {
             $downloadUrls = $this->getDownloadUrls($site);
-            $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
+            $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
             $tables = $this->_tables;
             foreach ($tables as $table) {
                 if ($table == 'CRAWL_ERRORS') {
@@ -467,16 +471,19 @@ class GWTdata
     /**
      *  Regular Expression to find the Security Token for a download file.
      *
-     *  @param string $uri           A Webmaster Tools Desktop Service URI.
-     *  @param string $delimiter     Trailing delimiter for the regex.
-     *  @return string    Security token.
+     * @param string $uri       A Webmaster Tools Desktop Service URI.
+     * @param string $delimiter Trailing delimiter for the regex.
+     * @return string           Security token.
      */
     private function getToken($uri, $delimiter, $dlUri='')
     {
         $matches = array();
         $tmp = $this->getData($uri);
         preg_match_all("#$dlUri.*?46security_token(.*?)$delimiter#si", $tmp, $matches);
-        return isset($matches[1][0]) ? substr($matches[1][0],3,-1) : '';
+        return isset($matches[1][0])
+            ? substr($matches[1][0], 3, -1)
+            : ''
+        ;
     }
 
     /**

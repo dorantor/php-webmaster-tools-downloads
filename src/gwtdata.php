@@ -123,9 +123,10 @@ class GWTdata
     }
 
     /**
-     *  Sets content language.
+     * Sets content language.
      *
-     *  @param string $str Valid ISO 639-1 language code, supported by Google.
+     * @param string $str Valid ISO 639-1 language code, supported by Google.
+     * @return $this
      */
     public function setLanguage($str)
     {
@@ -153,6 +154,7 @@ class GWTdata
     /**
      *  Sets date range for download data.
      *
+     * @throws Exception
      * @param string $dateStart ISO 8601 formatted date string
      * @param string $dateEnd ISO 8601 formatted date string
      * @return $this
@@ -339,7 +341,7 @@ class GWTdata
      *
      * @param string $site       Site URL available in GWT Account.
      * @param string $savepath   Optional path to save CSV to (no trailing slash!).
-     * @param return bool
+     * @return bool
      */
     public function downloadCSV($site, $savepath = '.')
     {
@@ -443,16 +445,17 @@ class GWTdata
                 $_url = sprintf($url, $this->_language, $site, $token);
                 $this->saveData($_url,$finalName);
             }
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
-     *  Saves data to a CSV file based on the given URL.
+     * Saves data to a CSV file based on the given URL.
      *
-     *  @param string $finalUrl      CSV Download URI.
-     *  @param string $finalName     Filepointer to save location.
+     * @param string $finalUrl      CSV Download URI.
+     * @param string $finalName     Filepointer to save location.
+     * @return bool
      */
     private function saveData($finalUrl, $finalName)
     {

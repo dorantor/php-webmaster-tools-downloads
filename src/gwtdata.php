@@ -30,8 +30,13 @@ class GWTdata
     const HOST = 'https://www.google.com';
     const SERVICEURI = '/webmasters/tools/';
 
-    public $_language, $_tables, $_daterange, $_downloaded, $_skipped;
-    private $_auth, $_logged_in;
+    public $_language = 'en';
+    public $_tables;
+    public $_daterange;
+    public $_downloaded = array();
+    public $_skipped = array();
+    private $_auth = false;
+    private $_logged_in = false;
 
     /**
      * Constructor
@@ -40,13 +45,8 @@ class GWTdata
      */
     public function __construct()
     {
-        $this->_auth = false;
-        $this->_logged_in = false;
-        $this->_language = 'en';
         $this->_daterange = array('','');
         $this->_tables = $this->getTables();
-        $this->_downloaded = array();
-        $this->_skipped = array();
     }
 
     /**

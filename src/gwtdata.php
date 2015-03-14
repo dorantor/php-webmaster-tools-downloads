@@ -302,12 +302,12 @@ class GWTdata
     }
 
     /**
-     *  Attempts authenticated GET Request.
+     * Attempts authenticated GET Request.
      *
      * @throws Exception
-     * @param string $url       URL for the GET request.
-     * @return mixed  Curl result as String,
-     *                 or false (Boolean) when Authentication fails.
+     * @param string $url  URL for the GET request.
+     * @return mixed       Curl result as String,
+     *                     or false (Boolean) when Authentication fails.
      */
     public function getData($url)
     {
@@ -342,8 +342,7 @@ class GWTdata
      * Gets all available sites from Google Webmaster Tools account.
      *
      * @throws Exception
-     * @return mixed  Array with all site URLs registered in GWT account,
-     *                 or false (Boolean) if request failed.
+     * @return array  Array with all site URLs registered in GWT account
      */
     public function getSites()
     {
@@ -369,18 +368,16 @@ class GWTdata
      *  Gets the download links for an available site
      *  from the Google Webmaster Tools account.
      *
-     *  @param string $url       Site URL registered in GWT.
-     *  @return mixed  Array with keys TOP_PAGES and TOP_QUERIES,
-     *                 or false (Boolean) when Authentication fails.
+     *  @param string $url Site URL registered in GWT.
+     *  @return mixed  Array with keys TOP_PAGES and TOP_QUERIES
      */
-    public function getDownloadUrls($url)
+    protected function getDownloadUrls($url)
     {
-        $_url = sprintf(
+        $url = sprintf(
             self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
-            $this->_language,
-            urlencode($url)
+            $this->_language, urlencode($url)
         );
-        $downloadList = $this->getData($_url);
+        $downloadList = $this->getData($url);
 
         return json_decode($downloadList, true);
     }
@@ -412,7 +409,7 @@ class GWTdata
                     break;
                 default:
                     $finalName = "$savepath/$table-$filename.csv";
-                    $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
+                    $finalUrl = $downloadUrls[$table] . '&prop=ALL&db=%s&de=%s&more=true';
                     $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
                     $this->saveData($finalUrl, $finalName);
             }

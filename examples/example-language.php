@@ -20,12 +20,12 @@ try {
             DateTime::createFromFormat('Y-m-d', '2012-01-10'),
             DateTime::createFromFormat('Y-m-d', '2012-01-12')
         )
-        ->SetTables($tables)
+        ->setTables($tables)
     ;
 
-    $sites = $gdata->GetSites();
+    $sites = $gdata->getSites();
     foreach($sites as $site) {
-        $gdata->DownloadCSV($site);
+        $gdata->downloadCSV($site);
     }
 } catch (Exception $e) {
     die($e->getMessage());

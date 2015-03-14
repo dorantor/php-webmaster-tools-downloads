@@ -120,7 +120,7 @@ class Gwt_Data
      * @param array $args
      * @return mixed
      */
-    public function __get($name, array $args)
+    public function __call($name, array $args)
     {
         // p.ex: getTopPagesTableData or gettoppagestabledata
         if (preg_match('#get([a-z]+)TableData#i', $name, $matches)) {

@@ -452,7 +452,6 @@ class GWTdata
      */
     public function downloadCSV($site, $savepath = '.')
     {
-        $downloadUrls = $this->getDownloadUrls($site);
         $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
         $tables = $this->_tables;
         foreach ($tables as $table) {
@@ -469,6 +468,7 @@ class GWTdata
                     $this->downloadCSV_XTRA($site, $table, $savepath);
                     break;
                 default:
+                    $downloadUrls = $this->getDownloadUrls($site);
                     $finalName = "$savepath/$table-$filename.csv";
                     $finalUrl = $downloadUrls[$table] . '&prop=ALL&db=%s&de=%s&more=true';
                     $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
@@ -489,21 +489,17 @@ class GWTdata
     public function downloadCSV_XTRA($site, $tableName, $savepath='.')
     {
         $options = $this->getTableOptions($tableName);
-        $tokenUri = $options['token_uri'];
-        $tokenDelimiter = $options['token_delimiter'];
-        $filenamePrefix = $tableName;
-        $dlUri = $options['dl_uri'];
 
         $uri = sprintf(
-            self::SERVICEURI . $tokenUri . '?hl=%s&siteUrl=%s',
+            self::SERVICEURI . $options['token_uri'] . '?hl=%s&siteUrl=%s',
             $this->_language, $site
         );
-        $token = $this->getToken($uri, $tokenDelimiter, $dlUri);
+        $token = $this->getToken($uri, $options['token_delimiter'], $options['dl_uri']);
         $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-        $finalName = "$savepath/$filenamePrefix-$filename.csv";
+        $finalName = "$savepath/$tableName-$filename.csv";
 
         $url = sprintf(
-            self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
+            self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
             $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd
         );
         $this->saveData($url, $finalName);

@@ -48,14 +48,14 @@ class GWTdata
     /**
      * Date for start of date range
      *
-     * @var string
+     * @var DateTime
      */
     protected $_dateStart;
 
     /**
      * Date for end of date range
      *
-     * @var string
+     * @var DateTime
      */
     protected $_dateEnd;
 
@@ -151,14 +151,35 @@ class GWTdata
      * Get data for requested table
      *
      * @param string $tableName
+     * @param string $site
      * @param DateTime $dateStart
      * @param DateTime $dateEnd
      * @param string $lang
      * @return string
      */
-    public function getTableData($tableName, DateTime $dateStart, DateTime $dateEnd, $lang = 'en')
+    public function getTableData($tableName, $site, DateTime $dateStart, DateTime $dateEnd, $lang = 'en')
     {
-        return '';
+        switch ($tableName) {
+            case 'CRAWL_ERRORS':
+                return $this->downloadCSV_CrawlErrors($site);
+                break;
+            case 'CONTENT_ERRORS':
+            case 'CONTENT_KEYWORDS':
+            case 'INTERNAL_LINKS':
+            case 'EXTERNAL_LINKS':
+            case 'SOCIAL_ACTIVITY':
+            case 'LATEST_BACKLINKS':
+                return $this->downloadCSV_XTRA($site, $tableName, $dateStart, $dateEnd);
+                break;
+            default: // TOP_QUERIES || TOP_PAGES
+                $downloadUrls = $this->getDownloadUrls($site);
+                $finalUrl = $downloadUrls[$tableName] . '&prop=ALL&db=%s&de=%s&more=true';
+                $finalUrl = sprintf(
+                    $finalUrl,
+                    $dateStart->format('Ymd'), $dateEnd->format('Ymd')
+                );
+                return $this->getData($finalUrl);
+        }
     }
 
     /**
@@ -284,8 +305,8 @@ class GWTdata
      */
     public function setDateRange(DateTime $dateStart, DateTime $dateEnd)
     {
-        $this->_dateStart   = $dateStart->format('Ymd');
-        $this->_dateEnd     = $dateEnd->format('Ymd');
+        $this->_dateStart   = $dateStart;
+        $this->_dateEnd     = $dateEnd;
 
         return $this;
     }
@@ -456,37 +477,10 @@ class GWTdata
         $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
         $tables = $this->_tables;
         foreach ($tables as $table) {
-            switch ($table) {
-                case 'CRAWL_ERRORS':
-                    $finalName = "$savepath/$table-$filename.csv";
-                    $this->saveData(
-                        $this->downloadCSV_CrawlErrors($site, $savepath),
-                        $finalName
-                    );
-                    break;
-                case 'CONTENT_ERRORS':
-                case 'CONTENT_KEYWORDS':
-                case 'INTERNAL_LINKS':
-                case 'EXTERNAL_LINKS':
-                case 'SOCIAL_ACTIVITY':
-                case 'LATEST_BACKLINKS':
-                    $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-                    $finalName = "$savepath/$table-$filename.csv";
-                    $this->saveData(
-                        $this->downloadCSV_XTRA($site, $table),
-                        $finalName
-                    );
-                    break;
-                default: // TOP_QUERIES || TOP_PAGES
-                    $downloadUrls = $this->getDownloadUrls($site);
-                    $finalName = "$savepath/$table-$filename.csv";
-                    $finalUrl = $downloadUrls[$table] . '&prop=ALL&db=%s&de=%s&more=true';
-                    $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
-                    $this->saveData(
-                        $this->getData($finalUrl),
-                        $finalName
-                    );
-            }
+            $this->saveData(
+                $this->getTableData($table, $this->_dateStart, $this->_dateEnd, $this->_language),
+                "$savepath/$table-$filename.csv"
+            );
         }
 
         return $this;
@@ -499,7 +493,7 @@ class GWTdata
      * @param string $tableName  Table name to be downloaded
      * @return mixed downloaded data
      */
-    private function downloadCSV_XTRA($site, $tableName)
+    private function downloadCSV_XTRA($site, $tableName, DateTime $dateStart, DateTime $dateEnd)
     {
         $options = $this->getTableOptions($tableName);
 
@@ -511,7 +505,7 @@ class GWTdata
 
         $url = sprintf(
             self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
-            $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd
+            $this->_language, $site, $token, $dateStart->format('Ymd'), $dateEnd->format('Ymd')
         );
 
         return $this->getData($url);

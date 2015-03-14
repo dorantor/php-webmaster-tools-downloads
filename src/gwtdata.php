@@ -191,7 +191,7 @@ class GWTdata
      */
     public function validateIsLoggedIn()
     {
-        if (!$this->isLoggedIn()) {
+        if (!(bool) $this->_auth) {
             throw new Exception('Must be logged in.');
         }
 
@@ -261,16 +261,6 @@ class GWTdata
     public function getSkippedFiles()
     {
         return $this->_skipped;
-    }
-
-    /**
-     *  Checks if client has logged into their Google account yet.
-     *
-     *  @return boolean  Returns true if logged in, or false if not.
-     */
-    private function isLoggedIn()
-    {
-        return (bool) $this->_auth;
     }
 
     /**
@@ -471,21 +461,19 @@ class GWTdata
         $filenamePrefix = $tableName;
         $dlUri = $options['dl_uri'];
 
-        if ($this->isLoggedIn() === true) {
-            $uri = sprintf(
-                self::SERVICEURI . $tokenUri . '?hl=%s&siteUrl=%s',
-                $this->_language, $site
-            );
-            $token = $this->getToken($uri, $tokenDelimiter, $dlUri);
-            $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-            $finalName = "$savepath/$filenamePrefix-$filename.csv";
+        $uri = sprintf(
+            self::SERVICEURI . $tokenUri . '?hl=%s&siteUrl=%s',
+            $this->_language, $site
+        );
+        $token = $this->getToken($uri, $tokenDelimiter, $dlUri);
+        $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
+        $finalName = "$savepath/$filenamePrefix-$filename.csv";
 
-            $url = sprintf(
-                self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
-                $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd
-            );
-            $this->saveData($url, $finalName);
-        }
+        $url = sprintf(
+            self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
+            $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd
+        );
+        $this->saveData($url, $finalName);
 
         return $this;
     }

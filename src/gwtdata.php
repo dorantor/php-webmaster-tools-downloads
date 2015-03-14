@@ -391,6 +391,54 @@ class GWTdata
     }
 
     /**
+     * Get options for given table
+     *
+     * @param string $tableName
+     * @return array
+     */
+    private function getTableOptions($tableName)
+    {
+        $options = array(
+            'CONTENT_ERRORS' => array(
+                'token_uri'         => 'html-suggestions',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'content-problems-dl',
+            ),
+            'CONTENT_KEYWORDS' => array(
+                'token_uri'         => 'keywords',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'content-words-dl',
+            ),
+            'INTERNAL_LINKS' => array(
+                'token_uri'         => 'internal-links',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'internal-links-dl',
+            ),
+            'EXTERNAL_LINKS' => array(
+                'token_uri'         => 'external-links-domain',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'external-links-domain-dl',
+            ),
+            'SOCIAL_ACTIVITY' => array(
+                'token_uri'         => 'social-activity',
+                'token_delimiter'   => 'x26',
+                'dl_uri'            => 'social-activity-dl',
+            ),
+            'LATEST_BACKLINKS' => array(
+                'token_uri'         => 'external-links-domain',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'backlinks-latest-dl',
+            ),
+        );
+
+        if (!array_key_exists($tableName, $options)) {
+            throw new Exception('Requested options for unknown table.');
+        }
+
+        return $options[$tableName];
+    }
+
+    /**
      *  Downloads "unofficial" downloads based on the given URL.
      *
      * @param string $site       Site URL available in GWT Account.

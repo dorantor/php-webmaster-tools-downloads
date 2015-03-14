@@ -457,7 +457,11 @@ class GWTdata
         foreach ($tables as $table) {
             switch ($table) {
                 case 'CRAWL_ERRORS':
-                    $this->downloadCSV_CrawlErrors($site, $savepath);
+                    $finalName = "$savepath/$table-$filename.csv";
+                    $this->saveData(
+                        $this->downloadCSV_CrawlErrors($site, $savepath),
+                        $finalName
+                    );
                     break;
                 case 'CONTENT_ERRORS':
                 case 'CONTENT_KEYWORDS':
@@ -465,9 +469,14 @@ class GWTdata
                 case 'EXTERNAL_LINKS':
                 case 'SOCIAL_ACTIVITY':
                 case 'LATEST_BACKLINKS':
-                    $this->downloadCSV_XTRA($site, $table, $savepath);
+                    $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
+                    $finalName = "$savepath/$table-$filename.csv";
+                    $this->saveData(
+                        $this->downloadCSV_XTRA($site, $table),
+                        $finalName
+                    );
                     break;
-                default:
+                default: // TOP_QUERIES || TOP_PAGES
                     $downloadUrls = $this->getDownloadUrls($site);
                     $finalName = "$savepath/$table-$filename.csv";
                     $finalUrl = $downloadUrls[$table] . '&prop=ALL&db=%s&de=%s&more=true';
@@ -486,10 +495,10 @@ class GWTdata
      *  Downloads "unofficial" downloads based on the given URL.
      *
      * @param string $site       Site URL available in GWT Account.
-     * @param string $savepath   Optional path to save CSV to (no trailing slash!).
-     * @return $this
+     * @param string $tablename  Table name to be downloaded
+     * @return mixed downloaded data
      */
-    public function downloadCSV_XTRA($site, $tableName, $savepath='.')
+    private function downloadCSV_XTRA($site, $tableName)
     {
         $options = $this->getTableOptions($tableName);
 
@@ -498,35 +507,30 @@ class GWTdata
             $this->_language, $site
         );
         $token = $this->getToken($uri, $options['token_delimiter'], $options['dl_uri']);
-        $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-        $finalName = "$savepath/$tableName-$filename.csv";
 
         $url = sprintf(
             self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
             $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd
         );
-        $this->saveData(
-            $this->getData($url),
-            $finalName
-        );
 
-        return $this;
+        return $this->getData($url);
     }
 
     /**
      * Downloads the Crawl Errors file based on the given URL.
      *
+     * @todo Make separated crawl errors accessible
      * @param string $site      Site URL available in GWT Account.
-     * @param string $savepath  Optional: Path to save CSV to (no trailing slash!).
      * @param bool $separated   Optional: If true, the method saves separated CSV files
      *                             for each error type. Default: Merge errors in one file.
      * @return $this
      */
-    public function downloadCSV_CrawlErrors($site, $savepath='.', $separated=false)
+    private function downloadCSV_CrawlErrors($site, $separated = false)
     {
         $type_param = 'we';
         $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
         if ($separated) {
+            $data = array();
             foreach ($this->getErrTablesSort() as $sortid => $sortname) {
                 foreach ($this->getErrTableTypes() as $typeid => $typename) {
                     if ($typeid == 1) {
@@ -543,27 +547,23 @@ class GWTdata
                         self::SERVICEURI . 'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s',
                         $this->_language, $site, $token, $typeid, $sortid
                     );
-                    $this->saveData(
-                        $this->getData($url),
-                        $finalName
-                    );
+
+                    // TODO: find a better solution - this one might require a lot of memory
+                    $data[$sortname][$typename] = $this->getData($url);
                 }
             }
+
+            return $data;
         } else {
             $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
             $token = $this->getToken($uri, 'x26');
-            $finalName = "$savepath/CRAWL_ERRORS-$filename.csv";
             $url = sprintf(
                 self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0',
                 $this->_language, $site, $token
             );
-            $this->saveData(
-                $this->getData($url),
-                $finalName
-            );
-        }
 
-        return $this;
+            return $this->getData($url);
+        }
     }
 
     /**

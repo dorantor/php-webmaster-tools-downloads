@@ -23,6 +23,7 @@
  * @author Anton Kolenkov <dorantor@gmail.com>
  * @link   https://code.google.com/p/php-webmaster-tools-downloads/
  * @link   https://github.com/eyecatchup/php-webmaster-tools-downloads/
+ * @link   https://github.com/dorantor/php-webmaster-tools-downloads/
  */
 
 /**
@@ -92,6 +93,7 @@ class Gwt_Data
         $self = new self();
         return $self->logIn($login, $pass);
     }
+
     /**
      * Get list of possible tables
      *

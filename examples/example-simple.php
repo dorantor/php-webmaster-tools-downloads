@@ -9,10 +9,9 @@ try {
     # If hardcoded, don't forget trailing slash!
     $website = "http://www.domain.com/";
 
-    $gdata = new GWTdata();
-    if ($gdata->logIn($email, $passwd) === true) {
-        $gdata->downloadCSV($website);
-    }
+    GWTdata::create($email, $passwd)
+        ->downloadCSV($website)
+    ;
 } catch (Exception $e) {
     die($e->getMessage());
 }

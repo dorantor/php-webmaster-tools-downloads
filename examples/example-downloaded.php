@@ -3,20 +3,19 @@
 include '../src/gwtdata.php';
 
 try {
-    $email = "username@gmail.com";
-    $passwd = "******";
+    $email = 'username@gmail.com';
+    $passwd = '******';
 
-    $gdata = new GWTdata();
-    if($gdata->LogIn($email, $passwd) === true) {
-        $sites = $gdata->GetSites();
-        foreach($sites as $site) {
-            $gdata->DownloadCSV($site, "./csv");
-        }
+    $gdata = GWTdata::create($email, $passwd);
 
-        $files = $gdata->GetDownloadedFiles();
-        foreach($files as $file) {
-            print "Saved $file<br>";
-        }
+    $sites = $gdata->GetSites();
+    foreach($sites as $site) {
+        $gdata->downloadCSV($site, './csv');
+    }
+
+    $files = $gdata->getDownloadedFiles();
+    foreach($files as $file) {
+        echo 'Saved ', $file, "\n";
     }
 } catch (Exception $e) {
     die($e->getMessage());

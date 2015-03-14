@@ -59,6 +59,7 @@ class GWTdata
 
     /**
      * Constructor
+     * It would be better to keep constructor free of any params
      *
      * return void
      */

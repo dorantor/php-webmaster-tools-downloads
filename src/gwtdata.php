@@ -355,28 +355,12 @@ class GWTdata
                         $this->downloadCSV_CrawlErrors($site, $savepath);
                         break;
                     case 'CONTENT_ERRORS':
-                        $this->downloadCSV_XTRA($site, $savepath,
-                            'html-suggestions', '\)', 'CONTENT_ERRORS', 'content-problems-dl');
-                        break;
                     case 'CONTENT_KEYWORDS':
-                        $this->downloadCSV_XTRA($site, $savepath,
-                            'keywords', '\)', 'CONTENT_KEYWORDS', 'content-words-dl');
-                        break;
                     case 'INTERNAL_LINKS':
-                        $this->downloadCSV_XTRA($site, $savepath,
-                            'internal-links', '\)', 'INTERNAL_LINKS', 'internal-links-dl');
-                        break;
                     case 'EXTERNAL_LINKS':
-                        $this->downloadCSV_XTRA($site, $savepath,
-                            'external-links-domain', '\)', 'EXTERNAL_LINKS', 'external-links-domain-dl');
-                        break;
                     case 'SOCIAL_ACTIVITY':
-                        $this->downloadCSV_XTRA($site, $savepath,
-                            'social-activity', 'x26', 'SOCIAL_ACTIVITY', 'social-activity-dl');
-                        break;
                     case 'LATEST_BACKLINKS':
-                        $this->downloadCSV_XTRA($site, $savepath,
-                            'external-links-domain', '\)', 'LATEST_BACKLINKS', 'backlinks-latest-dl');
+                        $this->downloadCSV_XTRA($site, $table, $savepath);
                         break;
                     default:
                         $finalName = "$savepath/$table-$filename.csv";
@@ -445,8 +429,14 @@ class GWTdata
      * @param string $savepath   Optional path to save CSV to (no trailing slash!).
      * @return bool
      */
-    public function downloadCSV_XTRA($site, $savepath='.', $tokenUri, $tokenDelimiter, $filenamePrefix, $dlUri)
+    public function downloadCSV_XTRA($site, $tableName, $savepath='.')
     {
+        $options = $this->getTableOptions($tableName);
+        $tokenUri = $options['token_uri'];
+        $tokenDelimiter = $options['token_delimiter'];
+        $filenamePrefix = $tableName;
+        $dlUri = $options['dl_uri'];
+
         if ($this->isLoggedIn() === true) {
             $uri = self::SERVICEURI . $tokenUri . '?hl=%s&siteUrl=%s';
             $_uri = sprintf($uri, $this->_language, $site);

@@ -171,6 +171,21 @@ class GWTdata
     }
 
     /**
+     * Shorthand for validating logged in state
+     *
+     * @throws Exception
+     * @return void
+     */
+    public function validateIsLoggedIn()
+    {
+        if (!$this->isLoggedIn()) {
+            throw new Exception('Must be logged in.');
+        }
+
+        return $this;
+    }
+
+    /**
      * Sets content language.
      *
      * @param string $str Valid ISO 639-1 language code, supported by Google.
@@ -246,11 +261,12 @@ class GWTdata
     }
 
     /**
-     *  Attempts to log into the specified Google account.
+     * Attempts to log into the specified Google account.
      *
-     *  @param string $email     User's Google email address.
-     *  @param string $pwd       Password for Google account.
-     *  @return boolean          Login result
+     * @throws Exception
+     * @param string $email     User's Google email address.
+     * @param string $pwd       Password for Google account.
+     * @return boolean          Login result
      */
     public function logIn($email, $pwd)
     {
@@ -288,75 +304,83 @@ class GWTdata
 
                 return true;
             } else {
-                return false;
+                throw new Exception('Auth code not found.');
             }
         } else {
-            return false;
+            throw new Exception(
+                'Bad response code: ' . var_export($info['http_code'], true)
+            );
         }
+
+        return $this;
     }
 
     /**
      *  Attempts authenticated GET Request.
      *
-     *  @param string $url       URL for the GET request.
-     *  @return mixed  Curl result as String,
+     * @throws Exception
+     * @param string $url       URL for the GET request.
+     * @return mixed  Curl result as String,
      *                 or false (Boolean) when Authentication fails.
      */
     public function getData($url)
     {
-        if ($this->isLoggedIn() === true) {
-            $url = self::HOST . $url;
-            $head = array(
-                'Authorization: GoogleLogin auth=' . $this->_auth,
-                'GData-Version: 2'
+        $this->validateIsLoggedIn();
+
+        $url = self::HOST . $url;
+        $head = array(
+            'Authorization: GoogleLogin auth=' . $this->_auth,
+            'GData-Version: 2'
+        );
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_ENCODING, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $head);
+        $result = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+
+        if ($info['http_code'] != 200) {
+            throw new Exception(
+                'Bad response code: ' . var_export($info['http_code'], true)
             );
-
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_ENCODING, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $head);
-            $result = curl_exec($ch);
-            $info = curl_getinfo($ch);
-            curl_close($ch);
-
-            return ($info['http_code'] != 200) ? false : $result;
         }
 
-        return false;
+        return $result;
     }
 
     /**
-     *  Gets all available sites from Google Webmaster Tools account.
+     * Gets all available sites from Google Webmaster Tools account.
      *
-     *  @return mixed  Array with all site URLs registered in GWT account,
+     * @throws Exception
+     * @return mixed  Array with all site URLs registered in GWT account,
      *                 or false (Boolean) if request failed.
      */
     public function getSites()
     {
-        if ($this->isLoggedIn() === true) {
-            $feed = $this->getData(self::SERVICEURI . 'feeds/sites/');
-            if ($feed !== false) {
-                $sites = array();
-                $doc = new DOMDocument();
-                $doc->loadXML($feed);
-                foreach ($doc->getElementsByTagName('entry') as $node) {
-                    array_push(
-                        $sites,
-                        $node->getElementsByTagName('title')->item(0)->nodeValue
-                    );
-                }
+        $this->validateIsLoggedIn();
 
-                return $sites;
-            } else {
-                return false;
+        $feed = $this->getData(self::SERVICEURI . 'feeds/sites/');
+        if ($feed !== false) {
+            $sites = array();
+            $doc = new DOMDocument();
+            $doc->loadXML($feed);
+            foreach ($doc->getElementsByTagName('entry') as $node) {
+                array_push(
+                    $sites,
+                    $node->getElementsByTagName('title')->item(0)->nodeValue
+                );
             }
+
+            return $sites;
         }
 
-        return false;
+        throw new Exception('Got no feed data for sites.');
     }
 
     /**
@@ -369,18 +393,16 @@ class GWTdata
      */
     public function getDownloadUrls($url)
     {
-        if ($this->isLoggedIn() === true) {
-            $_url = sprintf(
-                self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
-                $this->_language,
-                urlencode($url)
-            );
-            $downloadList = $this->getData($_url);
+        $this->validateIsLoggedIn();
 
-            return json_decode($downloadList, true);
-        }
+        $_url = sprintf(
+            self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
+            $this->_language,
+            urlencode($url)
+        );
+        $downloadList = $this->getData($_url);
 
-        return false;
+        return json_decode($downloadList, true);
     }
 
     /**
@@ -388,37 +410,37 @@ class GWTdata
      *
      * @param string $site       Site URL available in GWT Account.
      * @param string $savepath   Optional path to save CSV to (no trailing slash!).
-     * @return bool
+     * @return $this
      */
     public function downloadCSV($site, $savepath = '.')
     {
-        if ($this->isLoggedIn() === true) {
-            $downloadUrls = $this->getDownloadUrls($site);
-            $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-            $tables = $this->_tables;
-            foreach ($tables as $table) {
-                switch ($table) {
-                    case 'CRAWL_ERRORS':
-                        $this->downloadCSV_CrawlErrors($site, $savepath);
-                        break;
-                    case 'CONTENT_ERRORS':
-                    case 'CONTENT_KEYWORDS':
-                    case 'INTERNAL_LINKS':
-                    case 'EXTERNAL_LINKS':
-                    case 'SOCIAL_ACTIVITY':
-                    case 'LATEST_BACKLINKS':
-                        $this->downloadCSV_XTRA($site, $table, $savepath);
-                        break;
-                    default:
-                        $finalName = "$savepath/$table-$filename.csv";
-                        $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
-                        $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
-                        $this->saveData($finalUrl, $finalName);
-                }
+        $this->validateIsLoggedIn();
+
+        $downloadUrls = $this->getDownloadUrls($site);
+        $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
+        $tables = $this->_tables;
+        foreach ($tables as $table) {
+            switch ($table) {
+                case 'CRAWL_ERRORS':
+                    $this->downloadCSV_CrawlErrors($site, $savepath);
+                    break;
+                case 'CONTENT_ERRORS':
+                case 'CONTENT_KEYWORDS':
+                case 'INTERNAL_LINKS':
+                case 'EXTERNAL_LINKS':
+                case 'SOCIAL_ACTIVITY':
+                case 'LATEST_BACKLINKS':
+                    $this->downloadCSV_XTRA($site, $table, $savepath);
+                    break;
+                default:
+                    $finalName = "$savepath/$table-$filename.csv";
+                    $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
+                    $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
+                    $this->saveData($finalUrl, $finalName);
             }
         }
 
-        return false;
+        return $this;
     }
 
     /**
@@ -426,10 +448,12 @@ class GWTdata
      *
      * @param string $site       Site URL available in GWT Account.
      * @param string $savepath   Optional path to save CSV to (no trailing slash!).
-     * @return bool
+     * @return $this
      */
     public function downloadCSV_XTRA($site, $tableName, $savepath='.')
     {
+        $this->validateIsLoggedIn();
+
         $options = $this->getTableOptions($tableName);
         $tokenUri = $options['token_uri'];
         $tokenDelimiter = $options['token_delimiter'];
@@ -452,7 +476,7 @@ class GWTdata
             $this->saveData($url, $finalName);
         }
 
-        return false;
+        return $this;
     }
 
     /**
@@ -462,42 +486,42 @@ class GWTdata
      * @param string $savepath  Optional: Path to save CSV to (no trailing slash!).
      * @param bool $separated   Optional: If true, the method saves separated CSV files
      *                             for each error type. Default: Merge errors in one file.
-     * @return bool
+     * @return $this
      */
     public function downloadCSV_CrawlErrors($site, $savepath='.', $separated=false)
     {
-        if ($this->isLoggedIn() === true) {
-            $type_param = 'we';
-            $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-            if ($separated) {
-                foreach ($this->getErrTablesSort() as $sortid => $sortname) {
-                    foreach ($this->getErrTableTypes() as $typeid => $typename) {
-                        if ($typeid == 1) {
-                            $type_param = 'mx';
-                        } else if($typeid == 2) {
-                            $type_param = 'mc';
-                        } else {
-                            $type_param = 'we';
-                        }
-                        $uri = self::SERVICEURI . "crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
-                        $token = $this->getToken($uri, 'x26');
-                        $finalName = "$savepath/CRAWL_ERRORS-$typename-$sortname-$filename.csv";
-                        $url = self::SERVICEURI . 'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s';
-                        $_url = sprintf($url, $this->_language, $site, $token, $typeid, $sortid);
-                        $this->saveData($_url,$finalName);
+        $this->validateIsLoggedIn();
+
+        $type_param = 'we';
+        $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
+        if ($separated) {
+            foreach ($this->getErrTablesSort() as $sortid => $sortname) {
+                foreach ($this->getErrTableTypes() as $typeid => $typename) {
+                    if ($typeid == 1) {
+                        $type_param = 'mx';
+                    } else if($typeid == 2) {
+                        $type_param = 'mc';
+                    } else {
+                        $type_param = 'we';
                     }
+                    $uri = self::SERVICEURI . "crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
+                    $token = $this->getToken($uri, 'x26');
+                    $finalName = "$savepath/CRAWL_ERRORS-$typename-$sortname-$filename.csv";
+                    $url = self::SERVICEURI . 'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s';
+                    $_url = sprintf($url, $this->_language, $site, $token, $typeid, $sortid);
+                    $this->saveData($_url,$finalName);
                 }
-            } else {
-                $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
-                $token = $this->getToken($uri, 'x26');
-                $finalName = "$savepath/CRAWL_ERRORS-$filename.csv";
-                $url = self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0';
-                $_url = sprintf($url, $this->_language, $site, $token);
-                $this->saveData($_url, $finalName);
             }
+        } else {
+            $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
+            $token = $this->getToken($uri, 'x26');
+            $finalName = "$savepath/CRAWL_ERRORS-$filename.csv";
+            $url = self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0';
+            $_url = sprintf($url, $this->_language, $site, $token);
+            $this->saveData($_url, $finalName);
         }
 
-        return false;
+        return $this;
     }
 
     /**

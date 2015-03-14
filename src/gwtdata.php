@@ -216,8 +216,8 @@ class GWTdata
      *  Sets date range for download data.
      *
      * @throws Exception
-     * @param DateTime $dateStart ISO 8601 formatted date string
-     * @param DateTime $dateEnd ISO 8601 formatted date string
+     * @param DateTime $dateStart
+     * @param DateTime $dateEnd
      * @return $this
      */
     public function setDateRange(DateTime $dateStart, DateTime $dateEnd)
@@ -285,17 +285,17 @@ class GWTdata
         $info = curl_getinfo($ch);
         curl_close($ch);
 
-        if ($info['http_code'] == 200) {
-            preg_match('/Auth=(.*)/', $output, $match);
-            if (isset($match[1])) {
-                $this->_auth = $match[1];
-            } else {
-                throw new Exception('Auth code not found.');
-            }
-        } else {
+        if ($info['http_code'] != 200) {
             throw new Exception(
                 'Bad response code: ' . var_export($info['http_code'], true)
             );
+        }
+
+        preg_match('/Auth=(.*)/', $output, $match);
+        if (isset($match[1])) {
+            $this->_auth = $match[1];
+        } else {
+            throw new Exception('Auth code not found.');
         }
 
         return $this;

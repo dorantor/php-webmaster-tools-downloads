@@ -62,11 +62,23 @@ class GWTdata
      *
      * return void
      */
-    public function __construct()
+    private function __construct()
     {
         $this->_tables = $this->getAllowedTableNames();
     }
 
+    /**
+     * Factory for new object
+     *
+     * @param string $login
+     * @param string $pass
+     * @return GWTdata
+     */
+    public static function create($login, $pass)
+    {
+        $self = new self();
+        return $self->logIn($login, $pass);
+    }
     /**
      * Get list of possible tables
      *
@@ -301,8 +313,6 @@ class GWTdata
             preg_match('/Auth=(.*)/', $output, $match);
             if (isset($match[1])) {
                 $this->_auth = $match[1];
-
-                return true;
             } else {
                 throw new Exception('Auth code not found.');
             }

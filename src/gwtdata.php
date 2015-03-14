@@ -203,17 +203,14 @@ class GWTdata
      *  Sets date range for download data.
      *
      * @throws Exception
-     * @param string $dateStart ISO 8601 formatted date string
-     * @param string $dateEnd ISO 8601 formatted date string
+     * @param DateTime $dateStart ISO 8601 formatted date string
+     * @param DateTime $dateEnd ISO 8601 formatted date string
      * @return $this
      */
-    public function setDateRange($dateStart, $dateEnd)
+    public function setDateRange(DateTime $dateStart, DateTime $dateEnd)
     {
-        if (!$this->isISO8601($dateStart) || !$this->isISO8601($dateEnd)) {
-            throw new Exception('Date should be in ISO 8601 format.');
-        }
-        $this->_dateStart   =  str_replace('-', '', $dateStart);
-        $this->_dateEnd     =  str_replace('-', '', $dateEnd);
+        $this->_dateStart   = $dateStart->format('Ymd');
+        $this->_dateEnd     = $dateEnd->format('Ymd');
 
         return $this;
     }
@@ -266,7 +263,7 @@ class GWTdata
             'source'        => 'Google-WMTdownloadscript-0.1-php'
         );
 
-        // Before PHP version 5.2.0 and when the first char of $pass is an @ symbol,
+        // when the first char of $pass is an @ symbol,
         // send data in CURLOPT_POSTFIELDS as urlencoded string.
         if ('@' === (string) $pwd[0]) {
             $postRequest = http_build_query($postRequest);
@@ -283,6 +280,7 @@ class GWTdata
         $output = curl_exec($ch);
         $info = curl_getinfo($ch);
         curl_close($ch);
+
         if ($info['http_code'] == 200) {
             preg_match('/Auth=(.*)/', $output, $match);
             if (isset($match[1])) {
@@ -312,6 +310,7 @@ class GWTdata
                 'Authorization: GoogleLogin auth=' . $this->_auth,
                 'GData-Version: 2'
             );
+
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -324,7 +323,7 @@ class GWTdata
             $info = curl_getinfo($ch);
             curl_close($ch);
 
-            return ($info['http_code']!=200) ? false : $result;
+            return ($info['http_code'] != 200) ? false : $result;
         }
 
         return false;
@@ -533,25 +532,5 @@ class GWTdata
             ? substr($matches[1][0], 3, -1)
             : ''
         ;
-    }
-
-    /**
-     *  Validates ISO 8601 date format.
-     *
-     *  @param string $str  Valid ISO 8601 date string (eg. 2012-01-01).
-     *  @return  bool       Returns true if string has valid format, else false.
-     */
-    private function isISO8601($str)
-    {
-        $stamp = strtotime($str);
-
-        return (
-            is_numeric($stamp)
-            && checkdate(
-                date('m', $stamp),
-                date('d', $stamp),
-                date('Y', $stamp)
-            )
-        );
     }
 }

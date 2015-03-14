@@ -3,7 +3,7 @@
 ## Introduction
 
 NB! Take note that this fork is not backward compatible with eyecatchup/php-webmaster-tools-downloads. It introduces few breaking changes:
-- setDateRange($dateStart, $dateEnd) instead of setDateRange(array $dateRanges)
+- setDateRange(DateTime $dateStart, DateTime $dateEnd) instead of setDateRange(array $dateRanges)
 - downloadCSV_XTRA($site, $tableName, $savepath='.') instead of DownloadCSV_XTRA($site, $savepath=".", $tokenUri, $tokenDelimiter, $filenamePrefix, $dlUri)
 
 This project provides an easy way to automate downloading of data tables from Google Webmaster Tools and tries to provide a PHP alternative to the Python script available here http://code.google.com/p/webmaster-tools-downloads/, for downloading CSV files from Google Webmaster Tools.

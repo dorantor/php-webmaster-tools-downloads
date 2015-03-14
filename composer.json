@@ -3,22 +3,23 @@
     "description": "An easy way to automate downloading of data tables from Google Webmaster Tools",
     "license": "Apache-2.0",
     "authors": [
-      {
-        "name": "Stephan Schmitz",
-        "email": "eyecatchup@gmail.com",
-        "role": "Developer"
-      },
-      {
-        "name": "Anton Kolenkov",
-        "email": "dorantor@gmail.com",
-        "homepage": "http://dorantor.com",
-        "role": "Developer"
-      }
+        {
+            "name": "Stephan Schmitz",
+            "email": "eyecatchup@gmail.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Anton Kolenkov",
+            "email": "dorantor@gmail.com",
+            "homepage": "http://dorantor.com",
+            "role": "Developer"
+        }
     ],
     "autoload": {
         "classmap": ["src"]
     },
     "require": {
+        "php": ">=5.3.0",
         "ext-curl": "*"
     }
 }

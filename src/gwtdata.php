@@ -268,7 +268,7 @@ class GWTdata
 
         // Before PHP version 5.2.0 and when the first char of $pass is an @ symbol,
         // send data in CURLOPT_POSTFIELDS as urlencoded string.
-        if ('@' === (string) $pwd[0] || version_compare(PHP_VERSION, '5.2.0') < 0) {
+        if ('@' === (string) $pwd[0]) {
             $postRequest = http_build_query($postRequest);
         }
 

@@ -350,31 +350,39 @@ class GWTdata
             $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
             $tables = $this->_tables;
             foreach ($tables as $table) {
-                if ($table == 'CRAWL_ERRORS') {
-                    $this->downloadCSV_CrawlErrors($site, $savepath);
-                } elseif ($table == 'CONTENT_ERRORS') {
-                    $this->downloadCSV_XTRA($site, $savepath,
-                      'html-suggestions', '\)', 'CONTENT_ERRORS', 'content-problems-dl');
-                } elseif ($table == 'CONTENT_KEYWORDS') {
-                    $this->downloadCSV_XTRA($site, $savepath,
-                      'keywords', '\)', 'CONTENT_KEYWORDS', 'content-words-dl');
-                } elseif ($table == 'INTERNAL_LINKS') {
-                    $this->downloadCSV_XTRA($site, $savepath,
-                      'internal-links', '\)', 'INTERNAL_LINKS', 'internal-links-dl');
-                } elseif ($table=='EXTERNAL_LINKS') {
-                    $this->downloadCSV_XTRA($site, $savepath,
-                      'external-links-domain', '\)', 'EXTERNAL_LINKS', 'external-links-domain-dl');
-                } elseif ($table=='SOCIAL_ACTIVITY') {
-                    $this->downloadCSV_XTRA($site, $savepath,
-                      'social-activity', 'x26', 'SOCIAL_ACTIVITY', 'social-activity-dl');
-                } elseif ($table=='LATEST_BACKLINKS') {
-                    $this->downloadCSV_XTRA($site, $savepath,
-                      'external-links-domain', '\)', 'LATEST_BACKLINKS', 'backlinks-latest-dl');
-                } else {
-                    $finalName = "$savepath/$table-$filename.csv";
-                    $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
-                    $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
-                    $this->saveData($finalUrl, $finalName);
+                switch ($table) {
+                    case 'CRAWL_ERRORS':
+                        $this->downloadCSV_CrawlErrors($site, $savepath);
+                        break;
+                    case 'CONTENT_ERRORS':
+                        $this->downloadCSV_XTRA($site, $savepath,
+                            'html-suggestions', '\)', 'CONTENT_ERRORS', 'content-problems-dl');
+                        break;
+                    case 'CONTENT_KEYWORDS':
+                        $this->downloadCSV_XTRA($site, $savepath,
+                            'keywords', '\)', 'CONTENT_KEYWORDS', 'content-words-dl');
+                        break;
+                    case 'INTERNAL_LINKS':
+                        $this->downloadCSV_XTRA($site, $savepath,
+                            'internal-links', '\)', 'INTERNAL_LINKS', 'internal-links-dl');
+                        break;
+                    case 'EXTERNAL_LINKS':
+                        $this->downloadCSV_XTRA($site, $savepath,
+                            'external-links-domain', '\)', 'EXTERNAL_LINKS', 'external-links-domain-dl');
+                        break;
+                    case 'SOCIAL_ACTIVITY':
+                        $this->downloadCSV_XTRA($site, $savepath,
+                            'social-activity', 'x26', 'SOCIAL_ACTIVITY', 'social-activity-dl');
+                        break;
+                    case 'LATEST_BACKLINKS':
+                        $this->downloadCSV_XTRA($site, $savepath,
+                            'external-links-domain', '\)', 'LATEST_BACKLINKS', 'backlinks-latest-dl');
+                        break;
+                    default:
+                        $finalName = "$savepath/$table-$filename.csv";
+                        $finalUrl = $downloadUrls[$table] .'&prop=ALL&db=%s&de=%s&more=true';
+                        $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
+                        $this->saveData($finalUrl, $finalName);
                 }
             }
         }

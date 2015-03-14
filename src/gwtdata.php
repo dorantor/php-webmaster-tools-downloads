@@ -184,21 +184,6 @@ class GWTdata
     }
 
     /**
-     * Shorthand for validating logged in state
-     *
-     * @throws Exception
-     * @return void
-     */
-    public function validateIsLoggedIn()
-    {
-        if (!(bool) $this->_auth) {
-            throw new Exception('Must be logged in.');
-        }
-
-        return $this;
-    }
-
-    /**
      * Sets content language.
      *
      * @param string $str Valid ISO 639-1 language code, supported by Google.
@@ -326,8 +311,6 @@ class GWTdata
      */
     public function getData($url)
     {
-        $this->validateIsLoggedIn();
-
         $url = self::HOST . $url;
         $head = array(
             'Authorization: GoogleLogin auth=' . $this->_auth,
@@ -364,8 +347,6 @@ class GWTdata
      */
     public function getSites()
     {
-        $this->validateIsLoggedIn();
-
         $feed = $this->getData(self::SERVICEURI . 'feeds/sites/');
         if ($feed !== false) {
             $sites = array();
@@ -394,8 +375,6 @@ class GWTdata
      */
     public function getDownloadUrls($url)
     {
-        $this->validateIsLoggedIn();
-
         $_url = sprintf(
             self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
             $this->_language,
@@ -415,8 +394,6 @@ class GWTdata
      */
     public function downloadCSV($site, $savepath = '.')
     {
-        $this->validateIsLoggedIn();
-
         $downloadUrls = $this->getDownloadUrls($site);
         $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
         $tables = $this->_tables;
@@ -453,8 +430,6 @@ class GWTdata
      */
     public function downloadCSV_XTRA($site, $tableName, $savepath='.')
     {
-        $this->validateIsLoggedIn();
-
         $options = $this->getTableOptions($tableName);
         $tokenUri = $options['token_uri'];
         $tokenDelimiter = $options['token_delimiter'];
@@ -489,8 +464,6 @@ class GWTdata
      */
     public function downloadCSV_CrawlErrors($site, $savepath='.', $separated=false)
     {
-        $this->validateIsLoggedIn();
-
         $type_param = 'we';
         $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
         if ($separated) {

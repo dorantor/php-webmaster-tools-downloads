@@ -123,6 +123,54 @@ class GWTdata
     }
 
     /**
+     * Get options for given table
+     *
+     * @param string $tableName
+     * @return array
+     */
+    private function getTableOptions($tableName)
+    {
+        $options = array(
+            'CONTENT_ERRORS' => array(
+                'token_uri'         => 'html-suggestions',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'content-problems-dl',
+            ),
+            'CONTENT_KEYWORDS' => array(
+                'token_uri'         => 'keywords',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'content-words-dl',
+            ),
+            'INTERNAL_LINKS' => array(
+                'token_uri'         => 'internal-links',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'internal-links-dl',
+            ),
+            'EXTERNAL_LINKS' => array(
+                'token_uri'         => 'external-links-domain',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'external-links-domain-dl',
+            ),
+            'SOCIAL_ACTIVITY' => array(
+                'token_uri'         => 'social-activity',
+                'token_delimiter'   => 'x26',
+                'dl_uri'            => 'social-activity-dl',
+            ),
+            'LATEST_BACKLINKS' => array(
+                'token_uri'         => 'external-links-domain',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'backlinks-latest-dl',
+            ),
+        );
+
+        if (!array_key_exists($tableName, $options)) {
+            throw new Exception('Requested options for unknown table.');
+        }
+
+        return $options[$tableName];
+    }
+
+    /**
      * Sets content language.
      *
      * @param string $str Valid ISO 639-1 language code, supported by Google.
@@ -375,54 +423,6 @@ class GWTdata
     }
 
     /**
-     * Get options for given table
-     *
-     * @param string $tableName
-     * @return array
-     */
-    private function getTableOptions($tableName)
-    {
-        $options = array(
-            'CONTENT_ERRORS' => array(
-                'token_uri'         => 'html-suggestions',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'content-problems-dl',
-            ),
-            'CONTENT_KEYWORDS' => array(
-                'token_uri'         => 'keywords',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'content-words-dl',
-            ),
-            'INTERNAL_LINKS' => array(
-                'token_uri'         => 'internal-links',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'internal-links-dl',
-            ),
-            'EXTERNAL_LINKS' => array(
-                'token_uri'         => 'external-links-domain',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'external-links-domain-dl',
-            ),
-            'SOCIAL_ACTIVITY' => array(
-                'token_uri'         => 'social-activity',
-                'token_delimiter'   => 'x26',
-                'dl_uri'            => 'social-activity-dl',
-            ),
-            'LATEST_BACKLINKS' => array(
-                'token_uri'         => 'external-links-domain',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'backlinks-latest-dl',
-            ),
-        );
-
-        if (!array_key_exists($tableName, $options)) {
-            throw new Exception('Requested options for unknown table.');
-        }
-
-        return $options[$tableName];
-    }
-
-    /**
      *  Downloads "unofficial" downloads based on the given URL.
      *
      * @param string $site       Site URL available in GWT Account.
@@ -464,7 +464,7 @@ class GWTdata
     {
         if ($this->isLoggedIn() === true) {
             $type_param = 'we';
-            $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
+            $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
             if ($separated) {
                 foreach ($this->getErrTablesSort() as $sortid => $sortname) {
                     foreach ($this->getErrTableTypes() as $typeid => $typename) {
@@ -475,21 +475,21 @@ class GWTdata
                         } else {
                             $type_param = 'we';
                         }
-                        $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
-                        $token = $this->getToken($uri,'x26');
+                        $uri = self::SERVICEURI . "crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
+                        $token = $this->getToken($uri, 'x26');
                         $finalName = "$savepath/CRAWL_ERRORS-$typename-$sortname-$filename.csv";
-                        $url = self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s';
+                        $url = self::SERVICEURI . 'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s';
                         $_url = sprintf($url, $this->_language, $site, $token, $typeid, $sortid);
                         $this->saveData($_url,$finalName);
                     }
                 }
             } else {
                 $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
-                $token = $this->getToken($uri,'x26');
+                $token = $this->getToken($uri, 'x26');
                 $finalName = "$savepath/CRAWL_ERRORS-$filename.csv";
                 $url = self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0';
                 $_url = sprintf($url, $this->_language, $site, $token);
-                $this->saveData($_url,$finalName);
+                $this->saveData($_url, $finalName);
             }
         }
 

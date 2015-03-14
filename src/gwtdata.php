@@ -437,14 +437,19 @@ class GWTdata
         $dlUri = $options['dl_uri'];
 
         if ($this->isLoggedIn() === true) {
-            $uri = self::SERVICEURI . $tokenUri . '?hl=%s&siteUrl=%s';
-            $_uri = sprintf($uri, $this->_language, $site);
-            $token = $this->getToken($_uri, $tokenDelimiter, $dlUri);
-            $filename = parse_url($site, PHP_URL_HOST) .'-'. date('Ymd-His');
+            $uri = sprintf(
+                self::SERVICEURI . $tokenUri . '?hl=%s&siteUrl=%s',
+                $this->_language, $site
+            );
+            $token = $this->getToken($uri, $tokenDelimiter, $dlUri);
+            $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
             $finalName = "$savepath/$filenamePrefix-$filename.csv";
-            $url = self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true';
-            $_url = sprintf($url, $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd);
-            $this->saveData($_url, $finalName);
+
+            $url = sprintf(
+                self::SERVICEURI . $dlUri . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
+                $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd
+            );
+            $this->saveData($url, $finalName);
         }
 
         return false;

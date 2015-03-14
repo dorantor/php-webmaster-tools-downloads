@@ -472,7 +472,10 @@ class GWTdata
                     $finalName = "$savepath/$table-$filename.csv";
                     $finalUrl = $downloadUrls[$table] . '&prop=ALL&db=%s&de=%s&more=true';
                     $finalUrl = sprintf($finalUrl, $this->_dateStart, $this->_dateEnd);
-                    $this->saveData($finalUrl, $finalName);
+                    $this->saveData(
+                        $this->getData($finalUrl),
+                        $finalName
+                    );
             }
         }
 
@@ -502,7 +505,10 @@ class GWTdata
             self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
             $this->_language, $site, $token, $this->_dateStart, $this->_dateEnd
         );
-        $this->saveData($url, $finalName);
+        $this->saveData(
+            $this->getData($url),
+            $finalName
+        );
 
         return $this;
     }
@@ -533,18 +539,28 @@ class GWTdata
                     $uri = self::SERVICEURI . "crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
                     $token = $this->getToken($uri, 'x26');
                     $finalName = "$savepath/CRAWL_ERRORS-$typename-$sortname-$filename.csv";
-                    $url = self::SERVICEURI . 'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s';
-                    $_url = sprintf($url, $this->_language, $site, $token, $typeid, $sortid);
-                    $this->saveData($_url,$finalName);
+                    $url = sprintf(
+                        self::SERVICEURI . 'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s',
+                        $this->_language, $site, $token, $typeid, $sortid
+                    );
+                    $this->saveData(
+                        $this->getData($url),
+                        $finalName
+                    );
                 }
             }
         } else {
             $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
             $token = $this->getToken($uri, 'x26');
             $finalName = "$savepath/CRAWL_ERRORS-$filename.csv";
-            $url = self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0';
-            $_url = sprintf($url, $this->_language, $site, $token);
-            $this->saveData($_url, $finalName);
+            $url = sprintf(
+                self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0',
+                $this->_language, $site, $token
+            );
+            $this->saveData(
+                $this->getData($url),
+                $finalName
+            );
         }
 
         return $this;
@@ -553,13 +569,12 @@ class GWTdata
     /**
      * Saves data to a CSV file based on the given URL.
      *
-     * @param string $finalUrl      CSV Download URI.
-     * @param string $finalName     Filepointer to save location.
+     * @param string $data      Downloaded CSV data
+     * @param string $finalName Filepointer to save location.
      * @return bool
      */
-    private function saveData($finalUrl, $finalName)
+    private function saveData(&$data, $finalName)
     {
-        $data = $this->getData($finalUrl);
         if (strlen($data) > 1 && file_put_contents($finalName, utf8_decode($data))) {
             array_push($this->_downloaded, realpath($finalName));
 

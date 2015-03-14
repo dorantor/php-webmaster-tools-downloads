@@ -120,7 +120,7 @@ class GWTdata
      * @param array $args
      * @return mixed
      */
-    public function __get($name, $args)
+    public function __get($name, array $args)
     {
         // p.ex: getTopPagesTableData or gettoppagestabledata
         if (preg_match('#get([a-z]+)TableData#i', $name, $matches)) {
@@ -199,6 +199,7 @@ class GWTdata
     /**
      * Get options for given table
      *
+     * @throws Exception
      * @param string $tableName
      * @return array
      */
@@ -495,7 +496,7 @@ class GWTdata
      *  Downloads "unofficial" downloads based on the given URL.
      *
      * @param string $site       Site URL available in GWT Account.
-     * @param string $tablename  Table name to be downloaded
+     * @param string $tableName  Table name to be downloaded
      * @return mixed downloaded data
      */
     private function downloadCSV_XTRA($site, $tableName)
@@ -591,6 +592,7 @@ class GWTdata
      *
      * @param string $uri       A Webmaster Tools Desktop Service URI.
      * @param string $delimiter Trailing delimiter for the regex.
+     * @param string $dlUri
      * @return string           Security token.
      */
     private function getToken($uri, $delimiter, $dlUri='')

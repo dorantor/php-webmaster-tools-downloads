@@ -25,6 +25,18 @@
  * @link   https://github.com/eyecatchup/php-webmaster-tools-downloads/
  */
 
+/**
+ * Class for downloading data from CSV files from Google Webmaster Tools.
+ *
+ * @method mixed getTopPagesTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getTopQueriesTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getCrawlErrorsTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getContentKeywordsTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getInternalLinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getExternalLinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getSocialActivityTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getLatestBacklinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ */
 class GWTdata
 {
     const HOST = 'https://www.google.com';
@@ -98,6 +110,55 @@ class GWTdata
             'SOCIAL_ACTIVITY',
             'LATEST_BACKLINKS',
         );
+    }
+
+    /**
+     * Magic method to support shorthands for getTableData methods
+     *
+     * @throws Exception
+     * @param string $name
+     * @param array $args
+     * @return mixed
+     */
+    public function __get($name, $args)
+    {
+        // p.ex: getTopPagesTableData or gettoppagestabledata
+        if (preg_match('#get([a-z]+)TableData#i', $name, $matches)) {
+            // prepare table names w/o underscore
+            $names = array_map(
+                function ($item)
+                {
+                    return str_replace('_', '', $item);
+                },
+                $this->getAllowedTableNames()
+            );
+            // find corresponding table name
+            $key = array_search(
+                strtoupper($matches[1]),
+                $names
+            );
+            // call getTableData
+            return call_user_func_array(
+                array($this, 'getTableData'),
+                array_unshift($args, $this->getAllowedTableNames()[$key])
+            );
+        }
+
+        throw new Exception('Method ' . var_export($name, true) . ' does not exist.');
+    }
+
+    /**
+     * Get data for requested table
+     *
+     * @param string $tableName
+     * @param DateTime $dateStart
+     * @param DateTime $dateEnd
+     * @param string $lang
+     * @return string
+     */
+    public function getTableData($tableName, DateTime $dateStart, DateTime $dateEnd, $lang = 'en')
+    {
+        return '';
     }
 
     /**

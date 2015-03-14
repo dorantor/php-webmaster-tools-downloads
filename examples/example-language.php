@@ -1,6 +1,6 @@
 <?php
 
-include '../src/gwtdata.php';
+include '../src/Gwt/Data.php';
 
 try {
     $email = 'username@gmail.com';
@@ -14,7 +14,7 @@ try {
     # 'EXTERNAL_LINKS' and 'SOCIAL_ACTIVITY'.
     $tables = array('TOP_QUERIES');
 
-    $gdata = GWTdata::create($email, $passwd)
+    $gdata = Gwt_Data::create($email, $passwd)
         ->setLanguage($language)
         ->setDaterange(
             DateTime::createFromFormat('Y-m-d', '2012-01-10'),

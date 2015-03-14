@@ -37,7 +37,7 @@
  * @method mixed getSocialActivityTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
  * @method mixed getLatestBacklinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
  */
-class GWTdata
+class Gwt_Data
 {
     const HOST = 'https://www.google.com';
     const SERVICEURI = '/webmasters/tools/';
@@ -85,7 +85,7 @@ class GWTdata
      *
      * @param string $login
      * @param string $pass
-     * @return GWTdata
+     * @return Gwt_Data
      */
     public static function create($login, $pass)
     {
@@ -597,6 +597,6 @@ class GWTdata
         return isset($matches[1][0])
             ? substr($matches[1][0], 3, -1)
             : ''
-        ;
+            ;
     }
 }

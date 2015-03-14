@@ -1,6 +1,6 @@
 <?php
 
-include '../src/gwtdata.php';
+include '../src/Gwt/Data.php';
 
 try {
     $email = "username@gmail.com";
@@ -9,7 +9,7 @@ try {
     # If hardcoded, don't forget trailing slash!
     $website = "http://www.domain.com/";
 
-    GWTdata::create($email, $passwd)
+    Gwt_Data::create($email, $passwd)
         ->downloadCSV($website)
     ;
 } catch (Exception $e) {

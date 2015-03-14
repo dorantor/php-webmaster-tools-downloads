@@ -1,12 +1,12 @@
 <?php
 
-include '../src/gwtdata.php';
+include '../src/Gwt/Data.php';
 
 try {
     $email = 'username@gmail.com';
     $passwd = '******';
 
-    $gdata = GWTdata::create($email, $passwd);
+    $gdata = Gwt_Data::create($email, $passwd);
 
     $sites = $gdata->GetSites();
     foreach($sites as $site) {

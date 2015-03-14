@@ -16,7 +16,6 @@ try {
 
     $gdata = GWTdata::create($email, $passwd)
         ->setLanguage($language)
-        # Dates must be in valid ISO 8601 format.
         ->setDaterange(
             DateTime::createFromFormat('Y-m-d', '2012-01-10'),
             DateTime::createFromFormat('Y-m-d', '2012-01-12')

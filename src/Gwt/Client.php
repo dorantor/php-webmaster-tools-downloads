@@ -210,8 +210,8 @@ class Gwt_Client
                 return $this->downloadCSV_XTRA(
                     $this->getWebsite(),
                     $tableName,
-                    $this->_dateStart,
-                    $this->_dateEnd
+                    $this->getDateStart(),
+                    $this->getDateEnd()
                 );
                 break;
             default: // TOP_QUERIES || TOP_PAGES
@@ -219,7 +219,7 @@ class Gwt_Client
                 $finalUrl = $downloadUrls[$tableName] . '&prop=ALL&db=%s&de=%s&more=true';
                 $finalUrl = sprintf(
                     $finalUrl,
-                    $this->_dateStart->format('Ymd'), $this->_dateEnd->format('Ymd')
+                    $this->getDateStart()->format('Ymd'), $this->getDateEnd()->format('Ymd')
                 );
                 return $this->getData($finalUrl);
         }
@@ -391,6 +391,36 @@ class Gwt_Client
         $this->_dateEnd     = $dateEnd;
 
         return $this;
+    }
+
+    /**
+     * Get date start value
+     *
+     * @throws Exception
+     * @return DateTime
+     */
+    public function getDateStart()
+    {
+        if (null === $this->_dateStart) {
+            throw new Exception('You must set a dateStart value.');
+        }
+
+        return $this->_dateStart;
+    }
+
+    /**
+     * Get date end value
+     *
+     * @throws Exception
+     * @return DateTime
+     */
+    public function getDateEnd()
+    {
+        if (null === $this->_dateEnd) {
+            throw new Exception('You must set a dateEnd value.');
+        }
+
+        return $this->_dateEnd;
     }
 
     /**
@@ -637,7 +667,7 @@ class Gwt_Client
         $tables = $this->_tables;
         foreach ($tables as $table) {
             $this->saveData(
-                $this->getTableData($table, $site, $this->_dateStart, $this->_dateEnd, $this->getLanguage()),
+                $this->getTableData($table, $site, $this->getDateStart(), $this->getDateEnd(), $this->getLanguage()),
                 "$savepath/$table-$filename.csv"
             );
         }

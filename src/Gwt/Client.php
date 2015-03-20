@@ -57,6 +57,12 @@ class Gwt_Client
      */
     protected $_website = null;
 
+    /**
+     * Tables to download
+     *
+     * @deprecated
+     * @var array
+     */
     public $_tables;
 
     /**
@@ -73,7 +79,20 @@ class Gwt_Client
      */
     protected $_dateEnd;
 
+    /**
+     * Downloaded files
+     *
+     * @deprecated
+     * @var array
+     */
     public $_downloaded = array();
+
+    /**
+     * Skipped tables
+     *
+     * @deprecated
+     * @var array
+     */
     public $_skipped = array();
 
     /**
@@ -385,9 +404,10 @@ class Gwt_Client
     }
 
     /**
-     *  Returns array of downloaded filenames.
+     * Returns array of downloaded filenames.
      *
-     *  @return  array   Array of filenames that have been written to disk.
+     * @return array   Array of skipped tables (no data or was not able to save)
+     * @deprecated
      */
     public function getSkippedFiles()
     {
@@ -402,7 +422,7 @@ class Gwt_Client
      * @param string $pwd       Password for Google account.
      * @return boolean          Login result
      */
-    public function logIn($email, $pwd)
+    protected function logIn($email, $pwd)
     {
         $url = self::HOST . '/accounts/ClientLogin';
         $postRequest = array(
@@ -455,7 +475,7 @@ class Gwt_Client
      * @return mixed       Curl result as String,
      *                     or false (Boolean) when Authentication fails.
      */
-    public function getData($url)
+    protected function getData($url)
     {
         $url = self::HOST . $url;
         $head = array(

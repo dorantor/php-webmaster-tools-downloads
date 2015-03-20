@@ -29,16 +29,16 @@
 /**
  * Class for downloading data from CSV files from Google Webmaster Tools.
  *
- * @method mixed getTopPagesTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getTopQueriesTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getCrawlErrorsTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getContentKeywordsTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getTopPagesTableData($site, DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getTopQueriesTableData($site, DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getCrawlErrorsTableData($site, DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getContentKeywordsTableData($site, DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
  * @method mixed getInternalLinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
  * @method mixed getExternalLinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
  * @method mixed getSocialActivityTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
  * @method mixed getLatestBacklinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
  */
-class Gwt_Data
+class Gwt_Client
 {
     const HOST = 'https://www.google.com';
     const SERVICEURI = '/webmasters/tools/';
@@ -86,7 +86,7 @@ class Gwt_Data
      *
      * @param string $login
      * @param string $pass
-     * @return Gwt_Data
+     * @return Gwt_Client
      */
     public static function create($login, $pass)
     {
@@ -116,6 +116,7 @@ class Gwt_Data
 
     /**
      * Magic method to support shorthands for getTableData methods
+     * getTopPagesTableData
      *
      * @throws Exception
      * @param string $name
@@ -480,7 +481,7 @@ class Gwt_Data
         $tables = $this->_tables;
         foreach ($tables as $table) {
             $this->saveData(
-                $this->getTableData($table, $this->_dateStart, $this->_dateEnd, $this->_language),
+                $this->getTableData($table, $site, $this->_dateStart, $this->_dateEnd, $this->_language),
                 "$savepath/$table-$filename.csv"
             );
         }

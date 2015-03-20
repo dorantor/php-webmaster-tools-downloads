@@ -9,7 +9,7 @@ try {
     # If hardcoded, don't forget trailing slash!
     $website = "http://www.domain.com/";
 
-    Gwt_Data::create($email, $passwd)
+    Gwt_Client::create($email, $passwd)
         ->downloadCSV($website)
     ;
 } catch (Exception $e) {

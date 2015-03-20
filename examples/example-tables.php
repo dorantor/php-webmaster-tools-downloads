@@ -14,7 +14,7 @@ try {
     # 'EXTERNAL_LINKS' and 'SOCIAL_ACTIVITY'.
     $tables = array('TOP_QUERIES');
 
-    Gwt_Data::create($email, $passwd)
+    Gwt_Client::create($email, $passwd)
         ->setTables($tables)
         ->downloadCSV($website)
     ;

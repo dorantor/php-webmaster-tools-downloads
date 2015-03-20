@@ -6,7 +6,7 @@ try {
     $email = 'username@gmail.com';
     $passwd = '******';
 
-    $gdata = Gwt_Data::create($email, $passwd);
+    $gdata = Gwt_Client::create($email, $passwd);
 
     $sites = $gdata->GetSites();
     foreach($sites as $site) {

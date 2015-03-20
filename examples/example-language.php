@@ -14,7 +14,7 @@ try {
     # 'EXTERNAL_LINKS' and 'SOCIAL_ACTIVITY'.
     $tables = array('TOP_QUERIES');
 
-    $gdata = Gwt_Data::create($email, $passwd)
+    $gdata = Gwt_Client::create($email, $passwd)
         ->setLanguage($language)
         ->setDaterange(
             DateTime::createFromFormat('Y-m-d', '2012-01-10'),

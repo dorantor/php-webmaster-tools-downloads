@@ -49,7 +49,7 @@ try {
         // looping through all available tables
         $allowedTables = $client->getAllowedTableNames();
         foreach ($allowedTables as $tableName) {
-            try {
+            try { // any table may fail with exception
                 $filename = $client->getTableData($tableName);
             } catch (Exception $e) {
                 echo "Error during loading data for {$tableName} : ", $e->getMessage(), "\n";
@@ -62,7 +62,6 @@ try {
             echo "Unable to save data for {$tableName} from {$site} \n";
         }
     }
-
 } catch (Exception $e) {
     throw $e;
     die($e->getMessage());

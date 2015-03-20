@@ -87,22 +87,6 @@ class Gwt_Client
     protected $_dateEnd;
 
     /**
-     * Downloaded files
-     *
-     * @deprecated
-     * @var array
-     */
-    public $_downloaded = array();
-
-    /**
-     * Skipped tables
-     *
-     * @deprecated
-     * @var array
-     */
-    public $_skipped = array();
-
-    /**
      * After successful login will contain auth key
      *
      * @var mixed
@@ -143,7 +127,6 @@ class Gwt_Client
         return array(
             'TOP_PAGES',
             'TOP_QUERIES',
-            'CRAWL_ERRORS',
             'CONTENT_ERRORS',
             'CONTENT_KEYWORDS',
             'INTERNAL_LINKS',
@@ -205,9 +188,6 @@ class Gwt_Client
     public function getTableData($tableName)
     {
         switch ($tableName) {
-            case 'CRAWL_ERRORS':
-                $data = $this->downloadCSV_CrawlErrors($this->getWebsite());
-                break;
             case 'CONTENT_ERRORS':
             case 'CONTENT_KEYWORDS':
             case 'INTERNAL_LINKS':
@@ -236,41 +216,6 @@ class Gwt_Client
         }
 
         return $data;
-    }
-
-    /**
-     * Get errors list
-     *
-     * @return array
-     */
-    private function getErrTablesSort()
-    {
-        return array(
-            0 => 'http',
-            1 => 'not-found',
-            2 => 'restricted-by-robotsTxt',
-            3 => 'unreachable',
-            4 => 'timeout',
-            5 => 'not-followed',
-            'kAppErrorSoft-404s' => 'soft404',
-            'sitemap' => 'in-sitemaps',
-        );
-    }
-
-    /**
-     * Get error types
-     *
-     * @return array
-     */
-    private function getErrTableTypes()
-    {
-        return array(
-            0 => 'web-crawl-errors',
-            1 => 'mobile-wml-xhtml-errors',
-            2 => 'mobile-chtml-errors',
-            3 => 'mobile-operator-errors',
-            4 => 'news-crawl-errors',
-        );
     }
 
     /**
@@ -463,27 +408,6 @@ class Gwt_Client
     }
 
     /**
-     *  Returns array of downloaded filenames.
-     *
-     *  @return  array   Array of filenames that have been written to disk.
-     */
-    public function getDownloadedFiles()
-    {
-        return $this->_downloaded;
-    }
-
-    /**
-     * Returns array of downloaded filenames.
-     *
-     * @return array   Array of skipped tables (no data or was not able to save)
-     * @deprecated
-     */
-    public function getSkippedFiles()
-    {
-        return $this->_skipped;
-    }
-
-    /**
      * Attempts to log into the specified Google account.
      *
      * @throws Exception
@@ -650,56 +574,6 @@ class Gwt_Client
         );
 
         return $this->getData($url);
-    }
-
-    /**
-     * Downloads the Crawl Errors file based on the given URL.
-     *
-     * @todo Make separated crawl errors accessible
-     * @param string $site      Site URL available in GWT Account.
-     * @param bool $separated   Optional: If true, the method saves separated CSV files
-     *                             for each error type. Default: Merge errors in one file.
-     * @return $this
-     */
-    private function downloadCSV_CrawlErrors($site, $separated = false)
-    {
-        $type_param = 'we';
-        //$filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-        if ($separated) {
-            $data = array();
-            foreach ($this->getErrTablesSort() as $sortid => $sortname) {
-                foreach ($this->getErrTableTypes() as $typeid => $typename) {
-                    if ($typeid == 1) {
-                        $type_param = 'mx';
-                    } else if($typeid == 2) {
-                        $type_param = 'mc';
-                    } else {
-                        $type_param = 'we';
-                    }
-                    $uri = self::SERVICEURI . "crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
-                    $token = $this->getToken($uri, 'x26');
-                    $finalName = "$savepath/CRAWL_ERRORS-$typename-$sortname-$filename.csv";
-                    $url = sprintf(
-                        self::SERVICEURI . 'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s',
-                        $this->getLanguage(), $site, $token, $typeid, $sortid
-                    );
-
-                    // TODO: find a better solution - this one might require a lot of memory
-                    $data[$sortname][$typename] = $this->getData($url);
-                }
-            }
-
-            return $data;
-        } else {
-            $uri = self::SERVICEURI."crawl-errors?hl=en&siteUrl=$site&tid=$type_param";
-            $token = $this->getToken($uri, 'x26');
-            $url = sprintf(
-                self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0',
-                $this->getLanguage(), $site, $token
-            );
-
-            return $this->getData($url);
-        }
     }
 
     /**

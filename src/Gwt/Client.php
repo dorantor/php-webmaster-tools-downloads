@@ -579,6 +579,7 @@ class Gwt_Client
     /**
      *  Regular Expression to find the Security Token for a download file.
      *
+     * @throws Exception
      * @param string $uri       A Webmaster Tools Desktop Service URI.
      * @param string $delimiter Trailing delimiter for the regex.
      * @param string $dlUri
@@ -590,9 +591,11 @@ class Gwt_Client
         $tmp = $this->getData($uri);
 
         preg_match_all("#$dlUri.*?46security_token(.*?)$delimiter#si", $tmp, $matches);
-        return isset($matches[1][0])
-            ? substr($matches[1][0], 3, -1)
-            : ''
-            ;
+
+        if (!isset($matches[1][0])) {
+            throw new Exception('Failed to extract token');
+        }
+
+        return substr($matches[1][0], 3, -1);
     }
 }

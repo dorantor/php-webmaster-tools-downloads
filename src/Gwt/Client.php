@@ -58,6 +58,13 @@ class Gwt_Client
     protected $_website = null;
 
     /**
+     * List of sites on account with options
+     *
+     * @var array
+     */
+    protected $_sites = null;
+
+    /**
      * Tables to download
      *
      * @deprecated
@@ -193,13 +200,13 @@ class Gwt_Client
      * @param DateTime $dateStart
      * @param DateTime $dateEnd
      * @param string $lang
-     * @return string
+     * @return mixed
      */
     public function getTableData($tableName)
     {
         switch ($tableName) {
             case 'CRAWL_ERRORS':
-                return $this->downloadCSV_CrawlErrors($this->getWebsite());
+                $data = $this->downloadCSV_CrawlErrors($this->getWebsite());
                 break;
             case 'CONTENT_ERRORS':
             case 'CONTENT_KEYWORDS':
@@ -207,7 +214,7 @@ class Gwt_Client
             case 'EXTERNAL_LINKS':
             case 'SOCIAL_ACTIVITY':
             case 'LATEST_BACKLINKS':
-                return $this->downloadCSV_XTRA(
+                $data = $this->downloadCSV_XTRA(
                     $this->getWebsite(),
                     $tableName,
                     $this->getDateStart(),
@@ -221,8 +228,14 @@ class Gwt_Client
                     $finalUrl,
                     $this->getDateStart()->format('Ymd'), $this->getDateEnd()->format('Ymd')
                 );
-                return $this->getData($finalUrl);
+                $data = $this->getData($finalUrl);
         }
+
+        foreach ($this->_processors as $processor) {
+            $data = $processor->process($data, $tableName);
+        }
+
+        return $data;
     }
 
     /**
@@ -335,11 +348,23 @@ class Gwt_Client
     /**
      * Set website value
      *
+     * @throws Exception
      * @param $website
      * @return $this
      */
     public function setWebsite($website)
     {
+        $sites = $this->getSites();
+
+        // if wrong name is given, no requests could be made
+        if (!array_key_exists($website, $sites)) {
+            throw new Exception('Site ' . var_export($website, true) . ' not in current account.');
+        }
+        // if site is not verified, no requests could be made
+        if (!$sites[$website]['verified']) {
+            throw new Exception('Site ' . var_export($website, true) . ' is not verified.');
+        }
+
         $this->_website = $website;
 
         return $this;
@@ -421,6 +446,20 @@ class Gwt_Client
         }
 
         return $this->_dateEnd;
+    }
+
+    /**
+     * Add data processor
+     *
+     * @param Gwt_Processor_ProcessorInterface $processor
+     * @return $this
+     */
+    public function addProcessor(Gwt_Processor_ProcessorInterface $processor)
+    {
+        $processor->setClient($this);
+        $this->_processors[] = $processor;
+
+        return $this;
     }
 
     /**
@@ -528,6 +567,7 @@ class Gwt_Client
         if ($info['http_code'] != 200) {
             throw new Exception(
                 'Bad response code: ' . var_export($info['http_code'], true)
+                . ' for url ' . var_export($url, true)
             );
         }
 
@@ -538,26 +578,35 @@ class Gwt_Client
      * Gets all available sites from Google Webmaster Tools account.
      *
      * @throws Exception
+     * @param bool $reload
      * @return array  Array with all site URLs registered in GWT account
      */
-    public function getSites()
+    public function getSites($reload = false)
     {
-        $feed = $this->getData(self::SERVICEURI . 'feeds/sites/');
-        if ($feed !== false) {
-            $sites = array();
-            $doc = new DOMDocument();
-            $doc->loadXML($feed);
-            foreach ($doc->getElementsByTagName('entry') as $node) {
-                array_push(
-                    $sites,
-                    $node->getElementsByTagName('title')->item(0)->nodeValue
-                );
-            }
+        if (null === $this->_sites || $reload) {
+            $feed = $this->getData(self::SERVICEURI . 'feeds/sites/');
+            if ($feed !== false) {
+                $sites = array();
+                $doc = new DOMDocument();
+                $doc->loadXML($feed);
+                foreach ($doc->getElementsByTagName('entry') as $node) {
+                    $verified = $node
+                        ->getElementsByTagNameNS(
+                            'http://schemas.google.com/webmasters/tools/2007', 'verified'
+                        )->item(0)
+                        ->nodeValue;
+                    $sites[$node->getElementsByTagName('title')->item(0)->nodeValue] = array(
+                        'verified' => $verified == 'true',
+                    );
+                }
 
-            return $sites;
+                $this->_sites = $sites;
+            } else {
+                throw new Exception('Got no feed data for sites.');
+            }
         }
 
-        throw new Exception('Got no feed data for sites.');
+        return $this->_sites;
     }
 
     /**
@@ -615,7 +664,7 @@ class Gwt_Client
     private function downloadCSV_CrawlErrors($site, $separated = false)
     {
         $type_param = 'we';
-        $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
+        //$filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
         if ($separated) {
             $data = array();
             foreach ($this->getErrTablesSort() as $sortid => $sortname) {
@@ -654,49 +703,6 @@ class Gwt_Client
     }
 
     /**
-     * Downloads the file based on the given URL.
-     *
-     * @param string $site       Site URL available in GWT Account.
-     * @param string $savepath   Optional path to save CSV to (no trailing slash!).
-     * @return $this
-     * @deprecated
-     */
-    public function downloadCSV($site, $savepath = '.')
-    {
-        $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-        $tables = $this->_tables;
-        foreach ($tables as $table) {
-            $this->saveData(
-                $this->getTableData($table, $site, $this->getDateStart(), $this->getDateEnd(), $this->getLanguage()),
-                "$savepath/$table-$filename.csv"
-            );
-        }
-
-        return $this;
-    }
-
-    /**
-     * Saves data to a CSV file based on the given URL.
-     *
-     * @param string $data      Downloaded CSV data
-     * @param string $finalName Filepointer to save location.
-     * @return bool
-     * @deprecated
-     */
-    private function saveData(&$data, $finalName)
-    {
-        if (strlen($data) > 1 && file_put_contents($finalName, utf8_decode($data))) {
-            array_push($this->_downloaded, realpath($finalName));
-
-            return true;
-        } else {
-            array_push($this->_skipped, $finalName);
-
-            return false;
-        }
-    }
-
-    /**
      *  Regular Expression to find the Security Token for a download file.
      *
      * @param string $uri       A Webmaster Tools Desktop Service URI.
@@ -708,6 +714,7 @@ class Gwt_Client
     {
         $matches = array();
         $tmp = $this->getData($uri);
+
         preg_match_all("#$dlUri.*?46security_token(.*?)$delimiter#si", $tmp, $matches);
         return isset($matches[1][0])
             ? substr($matches[1][0], 3, -1)

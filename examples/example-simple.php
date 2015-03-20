@@ -1,17 +1,18 @@
 <?php
 
 include '../src/Gwt/Client.php';
+include 'config.sample.php';
 
 try {
-    $email = "username@gmail.com";
-    $passwd = "******";
-
-    # If hardcoded, don't forget trailing slash!
-    $website = "http://www.domain.com/";
-
-    Gwt_Client::create($email, $passwd)
-        ->downloadCSV($website)
+    $client = Gwt_Client::create($email, $password)
+        ->setDaterange(
+            new DateTime('-3 day', new DateTimeZone('UTC')),
+            new DateTime('-2 day', new DateTimeZone('UTC'))
+        )
+        ->setSite($website)
     ;
+
+    echo $client->getTopQueriesTableData();
 } catch (Exception $e) {
     die($e->getMessage());
 }

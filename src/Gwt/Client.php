@@ -29,21 +29,34 @@
 /**
  * Class for downloading data from CSV files from Google Webmaster Tools.
  *
- * @method mixed getTopPagesTableData($site, DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getTopQueriesTableData($site, DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getCrawlErrorsTableData($site, DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getContentKeywordsTableData($site, DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getInternalLinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getExternalLinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getSocialActivityTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
- * @method mixed getLatestBacklinksTableData(DateTime $dateStart, DateTime $dateEnd, string $lang = 'en')
+ * @method mixed getTopPagesTableData()
+ * @method mixed getTopQueriesTableData()
+ * @method mixed getCrawlErrorsTableData()
+ * @method mixed getContentKeywordsTableData()
+ * @method mixed getInternalLinksTableData()
+ * @method mixed getExternalLinksTableData()
+ * @method mixed getSocialActivityTableData()
+ * @method mixed getLatestBacklinksTableData()
  */
 class Gwt_Client
 {
     const HOST = 'https://www.google.com';
     const SERVICEURI = '/webmasters/tools/';
 
-    public $_language = 'en';
+    /**
+     * Language
+     *
+     * @var string
+     */
+    protected $_language = 'en';
+
+    /**
+     * Website
+     *
+     * @var string
+     */
+    protected $_website = null;
+
     public $_tables;
 
     /**
@@ -135,15 +148,18 @@ class Gwt_Client
                 },
                 $this->getAllowedTableNames()
             );
+
             // find corresponding table name
             $key = array_search(
                 strtoupper($matches[1]),
                 $names
             );
+
+            array_unshift($args, $this->getAllowedTableNames()[$key]);
             // call getTableData
             return call_user_func_array(
                 array($this, 'getTableData'),
-                array_unshift($args, $this->getAllowedTableNames()[$key])
+                $args
             );
         }
 
@@ -160,11 +176,11 @@ class Gwt_Client
      * @param string $lang
      * @return string
      */
-    public function getTableData($tableName, $site, DateTime $dateStart, DateTime $dateEnd, $lang = 'en')
+    public function getTableData($tableName)
     {
         switch ($tableName) {
             case 'CRAWL_ERRORS':
-                return $this->downloadCSV_CrawlErrors($site);
+                return $this->downloadCSV_CrawlErrors($this->getWebsite());
                 break;
             case 'CONTENT_ERRORS':
             case 'CONTENT_KEYWORDS':
@@ -172,14 +188,19 @@ class Gwt_Client
             case 'EXTERNAL_LINKS':
             case 'SOCIAL_ACTIVITY':
             case 'LATEST_BACKLINKS':
-                return $this->downloadCSV_XTRA($site, $tableName, $dateStart, $dateEnd);
+                return $this->downloadCSV_XTRA(
+                    $this->getWebsite(),
+                    $tableName,
+                    $this->_dateStart,
+                    $this->_dateEnd
+                );
                 break;
             default: // TOP_QUERIES || TOP_PAGES
-                $downloadUrls = $this->getDownloadUrls($site);
+                $downloadUrls = $this->getDownloadUrls($this->getWebsite());
                 $finalUrl = $downloadUrls[$tableName] . '&prop=ALL&db=%s&de=%s&more=true';
                 $finalUrl = sprintf(
                     $finalUrl,
-                    $dateStart->format('Ymd'), $dateEnd->format('Ymd')
+                    $this->_dateStart->format('Ymd'), $this->_dateEnd->format('Ymd')
                 );
                 return $this->getData($finalUrl);
         }
@@ -281,6 +302,45 @@ class Gwt_Client
 
         return $this;
     }
+
+    /**
+     * Get currently chosen language
+     *
+     * @return string
+     */
+    public function getLanguage()
+    {
+        return $this->_language;
+    }
+
+    /**
+     * Set website value
+     *
+     * @param $website
+     * @return $this
+     */
+    public function setWebsite($website)
+    {
+        $this->_website = $website;
+
+        return $this;
+    }
+
+    /**
+     * Get website name
+     *
+     * @throws Exception
+     * @return string
+     */
+    public function getWebsite()
+    {
+        if (null === $this->_website) {
+            throw new Exception('You must set a website value.');
+        }
+
+        return $this->_website;
+    }
+
 
     /**
      * Sets features that should be downloaded.
@@ -454,39 +514,18 @@ class Gwt_Client
      *  Gets the download links for an available site
      *  from the Google Webmaster Tools account.
      *
-     *  @param string $url Site URL registered in GWT.
+     *  @param string $site Site URL registered in GWT.
      *  @return mixed  Array with keys TOP_PAGES and TOP_QUERIES
      */
-    protected function getDownloadUrls($url)
+    protected function getDownloadUrls($site)
     {
         $url = sprintf(
             self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
-            $this->_language, urlencode($url)
+            $this->_language, urlencode($site)
         );
         $downloadList = $this->getData($url);
 
         return json_decode($downloadList, true);
-    }
-
-    /**
-     * Downloads the file based on the given URL.
-     *
-     * @param string $site       Site URL available in GWT Account.
-     * @param string $savepath   Optional path to save CSV to (no trailing slash!).
-     * @return $this
-     */
-    public function downloadCSV($site, $savepath = '.')
-    {
-        $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
-        $tables = $this->_tables;
-        foreach ($tables as $table) {
-            $this->saveData(
-                $this->getTableData($table, $site, $this->_dateStart, $this->_dateEnd, $this->_language),
-                "$savepath/$table-$filename.csv"
-            );
-        }
-
-        return $this;
     }
 
     /**
@@ -565,11 +604,34 @@ class Gwt_Client
     }
 
     /**
+     * Downloads the file based on the given URL.
+     *
+     * @param string $site       Site URL available in GWT Account.
+     * @param string $savepath   Optional path to save CSV to (no trailing slash!).
+     * @return $this
+     * @deprecated
+     */
+    public function downloadCSV($site, $savepath = '.')
+    {
+        $filename = parse_url($site, PHP_URL_HOST) . '-' . date('Ymd-His');
+        $tables = $this->_tables;
+        foreach ($tables as $table) {
+            $this->saveData(
+                $this->getTableData($table, $site, $this->_dateStart, $this->_dateEnd, $this->_language),
+                "$savepath/$table-$filename.csv"
+            );
+        }
+
+        return $this;
+    }
+
+    /**
      * Saves data to a CSV file based on the given URL.
      *
      * @param string $data      Downloaded CSV data
      * @param string $finalName Filepointer to save location.
      * @return bool
+     * @deprecated
      */
     private function saveData(&$data, $finalName)
     {

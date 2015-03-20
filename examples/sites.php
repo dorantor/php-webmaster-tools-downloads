@@ -1,12 +1,10 @@
 <?php
 
-include '../src/Gwt/Data.php';
+include '../src/Gwt/Client.php';
 
 try {
-    $email    = 'dorantor@gmail.com';
-    $password = 'zxssxftrvuqotlvl'; // use app password if you have two step verification
 
-    $sites = Gwt_Data::create($email, $password)
+    $sites = Gwt_Client::create($email, $password)
         ->getSites()
     ;
 

@@ -541,7 +541,7 @@ class Gwt_Client
     {
         $url = sprintf(
             self::SERVICEURI.'downloads-list?hl=%s&siteUrl=%s',
-            $this->_language, urlencode($site)
+            $this->getLanguage(), urlencode($site)
         );
         $downloadList = $this->getData($url);
 
@@ -561,13 +561,13 @@ class Gwt_Client
 
         $uri = sprintf(
             self::SERVICEURI . $options['token_uri'] . '?hl=%s&siteUrl=%s',
-            $this->_language, $site
+            $this->getLanguage(), $site
         );
         $token = $this->getToken($uri, $options['token_delimiter'], $options['dl_uri']);
 
         $url = sprintf(
             self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
-            $this->_language, $site, $token, $dateStart->format('Ymd'), $dateEnd->format('Ymd')
+            $this->getLanguage(), $site, $token, $dateStart->format('Ymd'), $dateEnd->format('Ymd')
         );
 
         return $this->getData($url);
@@ -602,7 +602,7 @@ class Gwt_Client
                     $finalName = "$savepath/CRAWL_ERRORS-$typename-$sortname-$filename.csv";
                     $url = sprintf(
                         self::SERVICEURI . 'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=%s&sort=%s',
-                        $this->_language, $site, $token, $typeid, $sortid
+                        $this->getLanguage(), $site, $token, $typeid, $sortid
                     );
 
                     // TODO: find a better solution - this one might require a lot of memory
@@ -616,7 +616,7 @@ class Gwt_Client
             $token = $this->getToken($uri, 'x26');
             $url = sprintf(
                 self::SERVICEURI.'crawl-errors-dl?hl=%s&siteUrl=%s&security_token=%s&type=0',
-                $this->_language, $site, $token
+                $this->getLanguage(), $site, $token
             );
 
             return $this->getData($url);
@@ -637,7 +637,7 @@ class Gwt_Client
         $tables = $this->_tables;
         foreach ($tables as $table) {
             $this->saveData(
-                $this->getTableData($table, $site, $this->_dateStart, $this->_dateEnd, $this->_language),
+                $this->getTableData($table, $site, $this->_dateStart, $this->_dateEnd, $this->getLanguage()),
                 "$savepath/$table-$filename.csv"
             );
         }

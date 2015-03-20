@@ -1,6 +1,6 @@
 <?php
 
-include '../src/Gwt/Data.php';
+include '../src/Gwt/Client.php';
 
 try {
     $email = 'username@gmail.com';

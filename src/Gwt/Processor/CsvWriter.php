@@ -206,7 +206,7 @@ class Gwt_Processor_CsvWriter
             }
         }
 
-        if (strlen($data) > 1 && file_put_contents($finalName, utf8_decode($data))) {
+        if (strlen($data) > 1 && file_put_contents($finalName, $data)) {
             return true;
         } else {
             return false;

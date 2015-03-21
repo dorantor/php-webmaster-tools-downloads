@@ -97,38 +97,6 @@ class Gwt_Client
     }
 
     /**
-     * Factory for new object
-     *
-     * @param string $login
-     * @param string $pass
-     * @return Gwt_Client
-     */
-    public static function create($login, $pass)
-    {
-        $self = new self();
-        return $self->logIn($login, $pass);
-    }
-
-    /**
-     * Get list of possible tables
-     *
-     * @return array
-     */
-    public function getAllowedTableNames()
-    {
-        return array(
-            'TOP_PAGES',
-            'TOP_QUERIES',
-            'CONTENT_ERRORS',
-            'CONTENT_KEYWORDS',
-            'INTERNAL_LINKS',
-            'EXTERNAL_LINKS',
-            'SOCIAL_ACTIVITY',
-            'LATEST_BACKLINKS',
-        );
-    }
-
-    /**
      * Magic method to support shorthands for getTableData methods
      * getTopPagesTableData
      *
@@ -168,103 +136,16 @@ class Gwt_Client
     }
 
     /**
-     * Get data for requested table
+     * Factory for new object
      *
-     * @param string $tableName
-     * @param string $site
-     * @param DateTime $dateStart
-     * @param DateTime $dateEnd
-     * @param string $lang
-     * @return mixed
+     * @param string $login
+     * @param string $pass
+     * @return Gwt_Client
      */
-    public function getTableData($tableName)
+    public static function create($login, $pass)
     {
-        switch ($tableName) {
-            case 'CONTENT_ERRORS':
-            case 'CONTENT_KEYWORDS':
-            case 'INTERNAL_LINKS':
-            case 'EXTERNAL_LINKS':
-            case 'SOCIAL_ACTIVITY':
-            case 'LATEST_BACKLINKS':
-                $options = $this->getTableOptions($tableName);
-
-                $url = sprintf(
-                    self::SERVICEURI . $options['token_uri'] . '?hl=%s&siteUrl=%s',
-                    $this->getLanguage(), $this->getWebsite()
-                );
-                $token = $this->getToken($url, $options['token_delimiter'], $options['dl_uri']);
-
-                $url = sprintf(
-                    self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
-                    $this->getLanguage(), $this->getWebsite(), $token, $this->getDateStart()->format('Ymd'), $this->getDateEnd()->format('Ymd')
-                );
-
-                $data = $this->getData($url);
-                break;
-            default: // TOP_QUERIES || TOP_PAGES
-                $downloadUrls = $this->getDownloadUrls($this->getWebsite());
-                $finalUrl = $downloadUrls[$tableName] . '&prop=ALL&db=%s&de=%s&more=true';
-                $finalUrl = sprintf(
-                    $finalUrl,
-                    $this->getDateStart()->format('Ymd'), $this->getDateEnd()->format('Ymd')
-                );
-                $data = $this->getData($finalUrl);
-        }
-
-        foreach ($this->_processors as $processor) {
-            $data = $processor->process($data, $tableName);
-        }
-
-        return $data;
-    }
-
-    /**
-     * Get options for given table
-     *
-     * @throws Exception
-     * @param string $tableName
-     * @return array
-     */
-    private function getTableOptions($tableName)
-    {
-        $options = array(
-            'CONTENT_ERRORS' => array(
-                'token_uri'         => 'html-suggestions',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'content-problems-dl',
-            ),
-            'CONTENT_KEYWORDS' => array(
-                'token_uri'         => 'keywords',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'content-words-dl',
-            ),
-            'INTERNAL_LINKS' => array(
-                'token_uri'         => 'internal-links',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'internal-links-dl',
-            ),
-            'EXTERNAL_LINKS' => array(
-                'token_uri'         => 'external-links-domain',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'external-links-domain-dl',
-            ),
-            'SOCIAL_ACTIVITY' => array(
-                'token_uri'         => 'social-activity',
-                'token_delimiter'   => 'x26',
-                'dl_uri'            => 'social-activity-dl',
-            ),
-            'LATEST_BACKLINKS' => array(
-                'token_uri'         => 'external-links-domain',
-                'token_delimiter'   => '\)',
-                'dl_uri'            => 'backlinks-latest-dl',
-            ),
-        );
-
-        if (!array_key_exists($tableName, $options)) {
-            throw new Exception('Requested options for unknown table.');
-        }
-
-        return $options[$tableName];
+        $self = new self();
+        return $self->logIn($login, $pass);
     }
 
     /**
@@ -374,6 +255,125 @@ class Gwt_Client
         }
 
         return $this->_dateEnd;
+    }
+
+    /**
+     * Get list of possible tables
+     *
+     * @return array
+     */
+    public function getAllowedTableNames()
+    {
+        return array(
+            'TOP_PAGES',
+            'TOP_QUERIES',
+            'CONTENT_ERRORS',
+            'CONTENT_KEYWORDS',
+            'INTERNAL_LINKS',
+            'EXTERNAL_LINKS',
+            'SOCIAL_ACTIVITY',
+            'LATEST_BACKLINKS',
+        );
+    }
+
+    /**
+     * Get data for requested table
+     *
+     * @param string $tableName
+     * @param string $site
+     * @param DateTime $dateStart
+     * @param DateTime $dateEnd
+     * @param string $lang
+     * @return mixed
+     */
+    public function getTableData($tableName)
+    {
+        switch ($tableName) {
+            case 'CONTENT_ERRORS':
+            case 'CONTENT_KEYWORDS':
+            case 'INTERNAL_LINKS':
+            case 'EXTERNAL_LINKS':
+            case 'SOCIAL_ACTIVITY':
+            case 'LATEST_BACKLINKS':
+                $options = $this->getTableOptions($tableName);
+
+                $url = sprintf(
+                    self::SERVICEURI . $options['token_uri'] . '?hl=%s&siteUrl=%s',
+                    $this->getLanguage(), $this->getWebsite()
+                );
+                $token = $this->getToken($url, $options['token_delimiter'], $options['dl_uri']);
+
+                $url = sprintf(
+                    self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
+                    $this->getLanguage(), $this->getWebsite(), $token, $this->getDateStart()->format('Ymd'), $this->getDateEnd()->format('Ymd')
+                );
+
+                $data = $this->getData($url);
+                break;
+            default: // TOP_QUERIES || TOP_PAGES
+                $downloadUrls = $this->getDownloadUrls($this->getWebsite());
+                $finalUrl = $downloadUrls[$tableName] . '&prop=ALL&db=%s&de=%s&more=true';
+                $finalUrl = sprintf(
+                    $finalUrl,
+                    $this->getDateStart()->format('Ymd'), $this->getDateEnd()->format('Ymd')
+                );
+                $data = $this->getData($finalUrl);
+        }
+
+        foreach ($this->_processors as $processor) {
+            $data = $processor->process($data, $tableName);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get options for given table
+     *
+     * @throws Exception
+     * @param string $tableName
+     * @return array
+     */
+    private function getTableOptions($tableName)
+    {
+        $options = array(
+            'CONTENT_ERRORS' => array(
+                'token_uri'         => 'html-suggestions',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'content-problems-dl',
+            ),
+            'CONTENT_KEYWORDS' => array(
+                'token_uri'         => 'keywords',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'content-words-dl',
+            ),
+            'INTERNAL_LINKS' => array(
+                'token_uri'         => 'internal-links',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'internal-links-dl',
+            ),
+            'EXTERNAL_LINKS' => array(
+                'token_uri'         => 'external-links-domain',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'external-links-domain-dl',
+            ),
+            'SOCIAL_ACTIVITY' => array(
+                'token_uri'         => 'social-activity',
+                'token_delimiter'   => 'x26',
+                'dl_uri'            => 'social-activity-dl',
+            ),
+            'LATEST_BACKLINKS' => array(
+                'token_uri'         => 'external-links-domain',
+                'token_delimiter'   => '\)',
+                'dl_uri'            => 'backlinks-latest-dl',
+            ),
+        );
+
+        if (!array_key_exists($tableName, $options)) {
+            throw new Exception('Requested options for unknown table.');
+        }
+
+        return $options[$tableName];
     }
 
     /**

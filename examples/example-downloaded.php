@@ -7,8 +7,8 @@ include '../src/Gwt/Processor/CsvWriter.php';
 // load config values
 include 'config.sample.php';
 
+// full scale example for downloading everything what's possible and handling all errors
 try {
-
     $client = Gwt_Client::create($email, $password)
         ->setDaterange(
             new DateTime('-10 day', new DateTimeZone('UTC')),
@@ -36,16 +36,6 @@ try {
             echo 'Caught exception: ', $e->getMessage(), "\n";
             continue;
         }
-
-        /*
-        // using shorthand method
-        $filename = $client->getTopQueriesTableData();
-        if (!$filename) {
-            echo "Data for top queries from {$site} saved to {$filename} \n";
-        } else {
-            echo "Unable to save data for top queries from {$site} \n";
-        }
-        */
 
         // looping through all available tables
         $allowedTables = $client->getAllowedTableNames();

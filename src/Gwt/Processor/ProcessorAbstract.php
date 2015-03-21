@@ -20,7 +20,6 @@
  *  limitations under the License.
  *
  * @author Anton Kolenkov <dorantor@gmail.com>
- * @link   https://code.google.com/p/php-webmaster-tools-downloads/
  * @link   https://github.com/dorantor/php-webmaster-tools-downloads/
  */
 

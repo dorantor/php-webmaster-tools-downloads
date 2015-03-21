@@ -25,6 +25,9 @@
  * @link   https://github.com/eyecatchup/php-webmaster-tools-downloads/
  */
 
+/**
+ * Class for writing downloaded CSV files from GWT
+ */
 class Gwt_Processor_CsvWriter
     extends Gwt_Processor_ProcessorAbstract
 {

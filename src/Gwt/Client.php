@@ -330,23 +330,6 @@ class Gwt_Client
         return $this->_website;
     }
 
-
-    /**
-     * Sets features that should be downloaded.
-     *
-     * @param array $tables For valid values see getAllowedTableNames() method
-     * @return $this
-     */
-    public function setTables(array $tables)
-    {
-        $this->_tables = array_intersect(
-            $this->getAllowedTableNames(),
-            $tables
-        );
-
-        return $this;
-    }
-
     /**
      *  Sets date range for download data.
      *

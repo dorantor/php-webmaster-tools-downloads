@@ -194,12 +194,20 @@ class Gwt_Client
             case 'EXTERNAL_LINKS':
             case 'SOCIAL_ACTIVITY':
             case 'LATEST_BACKLINKS':
-                $data = $this->downloadCSV_XTRA(
-                    $this->getWebsite(),
-                    $tableName,
-                    $this->getDateStart(),
-                    $this->getDateEnd()
+                $options = $this->getTableOptions($tableName);
+
+                $url = sprintf(
+                    self::SERVICEURI . $options['token_uri'] . '?hl=%s&siteUrl=%s',
+                    $this->getLanguage(), $this->getWebsite()
                 );
+                $token = $this->getToken($url, $options['token_delimiter'], $options['dl_uri']);
+
+                $url = sprintf(
+                    self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
+                    $this->getLanguage(), $this->getWebsite(), $token, $this->getDateStart()->format('Ymd'), $this->getDateEnd()->format('Ymd')
+                );
+
+                $data = $this->getData($url);
                 break;
             default: // TOP_QUERIES || TOP_PAGES
                 $downloadUrls = $this->getDownloadUrls($this->getWebsite());
@@ -532,31 +540,6 @@ class Gwt_Client
         $downloadList = $this->getData($url);
 
         return json_decode($downloadList, true);
-    }
-
-    /**
-     *  Downloads "unofficial" downloads based on the given URL.
-     *
-     * @param string $site       Site URL available in GWT Account.
-     * @param string $tableName  Table name to be downloaded
-     * @return mixed downloaded data
-     */
-    private function downloadCSV_XTRA($site, $tableName, DateTime $dateStart, DateTime $dateEnd)
-    {
-        $options = $this->getTableOptions($tableName);
-
-        $uri = sprintf(
-            self::SERVICEURI . $options['token_uri'] . '?hl=%s&siteUrl=%s',
-            $this->getLanguage(), $site
-        );
-        $token = $this->getToken($uri, $options['token_delimiter'], $options['dl_uri']);
-
-        $url = sprintf(
-            self::SERVICEURI . $options['dl_uri'] . '?hl=%s&siteUrl=%s&security_token=%s&prop=ALL&db=%s&de=%s&more=true',
-            $this->getLanguage(), $site, $token, $dateStart->format('Ymd'), $dateEnd->format('Ymd')
-        );
-
-        return $this->getData($url);
     }
 
     /**

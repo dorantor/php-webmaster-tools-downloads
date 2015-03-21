@@ -11,13 +11,14 @@ try {
     # Valid values are 'TOP_PAGES', 'TOP_QUERIES',
     # 'CONTENT_ERRORS', 'CONTENT_KEYWORDS', 'INTERNAL_LINKS',
     # 'EXTERNAL_LINKS' and 'SOCIAL_ACTIVITY'.
-    $tables = array('TOP_QUERIES');
+    $tableName = 'TOP_QUERIES';
 
-    $client = Gwt_Client::create($email, $passwd)
+    $client = Gwt_Client::create($email, $password)
         ->setDaterange(
             new DateTime('-10 day', new DateTimeZone('UTC')),
             new DateTime('-9 day',  new DateTimeZone('UTC'))
         )
+        ->setWebsite($website)
         ->addProcessor(
             Gwt_Processor_CsvWriter::factory(array(
                 'savePath'          => '.',
@@ -27,7 +28,8 @@ try {
         )
     ;
 
-    $filenames = $client->getTableData($tableName);
+    echo $client->getTableData($tableName);
+
 
 } catch (Exception $e) {
     die($e->getMessage());

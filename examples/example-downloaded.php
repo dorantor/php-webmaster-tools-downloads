@@ -22,8 +22,8 @@ try {
     $client->addProcessor(
         Gwt_Processor_CsvWriter::factory(array(
             'savePath'          => '.',
-            'dateFormat'        => 'Ymd-His',
-            'filenameTemplate'  => '{website}' . DIRECTORY_SEPARATOR . '{tableName}-{date}.csv',
+            'dateFormat'        => 'Ymd',
+            'filenameTemplate'  => '{website}' . DIRECTORY_SEPARATOR . '{tableName}-{dateStart}-{dateEnd}.csv',
         ))
     );
     foreach ($sites as $site => $siteOptions) {

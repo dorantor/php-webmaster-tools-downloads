@@ -40,14 +40,14 @@ class Gwt_Processor_CsvWriter
      *
      * @var string
      */
-    private $_dateFormat = 'Ymd-His';
+    private $_dateFormat = 'Ymd';
 
     /**
      * Template used to build filename
      *
      * @var string
      */
-    private $_filenameTemplate = '{website}-{tableName}-{date}.csv';
+    private $_filenameTemplate = '{website}-{tableName}-{dateStart}-{dateEnd}.csv';
 
     /**
      * Process data
@@ -137,33 +137,6 @@ class Gwt_Processor_CsvWriter
     }
 
     /**
-     * Set datetime to be used in filename
-     *
-     * @todo use clients dateStart-dateEnd
-     * @param DateTime $dt
-     * @return void
-     */
-    public function setDateTime(DateTime $dt)
-    {
-        $this->_dt = $dt;
-    }
-
-    /**
-     * Get datetime to be used in filename
-     *
-     * @todo use clients dateStart-dateEnd
-     * @return DateTime
-     */
-    public function getDateTime()
-    {
-        if (null !== $this->_dt) {
-            return $this->_dt;
-        }
-
-        return new DateTime('now', new DateTimeZone('UTC'));
-    }
-
-    /**
      * Build filename using template
      *
      * @param $tableName
@@ -179,10 +152,19 @@ class Gwt_Processor_CsvWriter
         );
         $filename = str_replace('{tableName}', $tableName, $filename);
         $filename = str_replace(
-            '{date}',
-            $this->getDateTime()->format($this->getDateFormat()),
+            '{dateStart}',
+            $this->getClient()->getDateStart()->format($this->getDateFormat()),
             $filename
         );
+        $filename = str_replace(
+            '{dateEnd}',
+            $this->getClient()->getDateEnd()->format($this->getDateFormat()),
+            $filename
+        );
+
+        if (preg_match('#{[^}]*}#', $filename, $matches)) {
+            throw new Exception('Unknown placeholder is found: ' . var_export($matches[0], true));
+        }
 
         return $filename;
     }

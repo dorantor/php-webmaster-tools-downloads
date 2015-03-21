@@ -1,15 +1,17 @@
 <?php
 
 include '../src/Gwt/Client.php';
+
+// load config values
 include 'config.sample.php';
 
 try {
     $client = Gwt_Client::create($email, $password)
         ->setDaterange(
-            new DateTime('-3 day', new DateTimeZone('UTC')),
-            new DateTime('-2 day', new DateTimeZone('UTC'))
+            new DateTime('-10 day', new DateTimeZone('UTC')),
+            new DateTime('-9 day',  new DateTimeZone('UTC'))
         )
-        ->setSite($website)
+        ->setWebsite($website)
     ;
 
     echo $client->getTopQueriesTableData();

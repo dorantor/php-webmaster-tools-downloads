@@ -4,6 +4,7 @@ include '../src/Gwt/Client.php';
 include '../src/Gwt/Processor/ProcessorInterface.php';
 include '../src/Gwt/Processor/ProcessorAbstract.php';
 include '../src/Gwt/Processor/CsvWriter.php';
+
 // load config values
 include 'config.sample.php';
 

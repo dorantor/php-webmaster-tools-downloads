@@ -40,6 +40,13 @@ class Gwt_Processor_Array
      */
     public function process($data, $tableName)
     {
-        return null;
+        $result = array();
+        $rows = str_getcsv($data, "\n");
+        $fieldNames = str_getcsv(array_shift($rows));
+        foreach ($rows as $row) {
+            $result[] = str_getcsv($row);
+        }
+
+        return array($fieldNames, $result);
     }
 }

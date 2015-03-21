@@ -1,23 +1,20 @@
-# GWTdata: Download website data from Google Webmaster Tools as CSV.
+# GWT data tools: Download website data from Google Webmaster Tools for automated processing
 
 ## Introduction
 
-NB! Take note that this fork is not backward compatible with eyecatchup/php-webmaster-tools-downloads. It introduces few breaking changes:
-- setDateRange(DateTime $dateStart, DateTime $dateEnd) instead of setDateRange(array $dateRanges)
-- downloadCSV_XTRA($site, $tableName, $savepath='.') instead of DownloadCSV_XTRA($site, $savepath=".", $tokenUri, $tokenDelimiter, $filenamePrefix, $dlUri)
-
-This project provides an easy way to automate downloading of data tables from Google Webmaster Tools and tries to provide a PHP alternative to the Python script available here http://code.google.com/p/webmaster-tools-downloads/, for downloading CSV files from Google Webmaster Tools.
-
-Unlike the python script (or a perfect clone), this solution does NOT require an extra client library or zend package be installed in order to run.
-Also it has some advanced functionality.
+NB! This fork is not backward compatible with eyecatchup/php-webmaster-tools-downloads.
+Consider it as major version change.
+This project provides an easy way to automate retrieval of data from Google Webmaster Tools
+and makes it possible to either save data as it is(in CSV) or have it in PHP arrays for further processing(saving to DB, for example).
+Compared to ancestor it's a little bit more verbose, but provides more control, which is important for integration into bigger projects.
+Best description of how to use it you will find in examples. Feel free to copy code from there.
 
 ### Features
 
-Since the official download list (used by the python script) returns download URLs for 1.) Top Search Queries and 2.) Top Pages only, but via the web interface there're much more downloads available, i extended the GWTdata class, so you can now download website data for:
+List of data sources is almost the same as in eyecatchup/php-webmaster-tools-downloads except dropped support for CRAWL_ERRORS(see below):
 
  - TOP_PAGES
  - TOP_QUERIES
- - CRAWL_ERRORS
  - CONTENT_ERRORS
  - CONTENT_KEYWORDS
  - LATEST_BACKLINKS
@@ -25,234 +22,110 @@ Since the official download list (used by the python script) returns download UR
  - EXTERNAL_LINKS
  - SOCIAL_ACTIVITY
 
-### Update notice
+Also you can choose what you want to do with downloaded data using processors(see examples below). By default you have only three processors:
+ - CsvWriter - if you need similar functionality to eyecatchup/php-webmaster-tools-downloads
+ - Array - if you need it converted to php array
+ - ArrayFilter - if you want to cleanup a little prepared php array
 
-In case you want to automate downloading <b>crawl errors</b>, please go here: https://github.com/eyecatchup/GWT_CrawlErrors-php 
+Right now prepared array consists of two pieces:
+ - field names
+ - data itself w/o field names
+It makes it more memory efficient. But you always can write your own processor!
 
-## Usage
+### CRAWL_ERRORS notice
 
-This document explains how to automate the file download process from Google Webmaster Tools by showing examples for using the php class GWTdata.
+In case you want to automate downloading of <b>crawl errors</b>, please go here: https://github.com/eyecatchup/GWT_CrawlErrors-php
 
-### Get started
+## Installation
 
-To get started, the steps are as follows:
+Install the library using [composer][1]. Add the following to your `composer.json`:
 
- - Download the php file gwtdata.php.
- - Create a folder and add the gwtdata.php script to it.
+```json
+{
+    "require": {
+        "dorantor/php-webmaster-tools-downloads": "dev-master"
+    },
+    "minimum-stability": "dev"
+}
+```
 
-### Example 1 - `DownloadCSV()`
+Now run the `install` command.
 
-To download CSV data for a single domain name of choice, the steps are as follows:
+```sh
+$ composer.phar install
+```
+## Examples
 
- - In the same folder where you added the gwtdata.php, create and run the following PHP script.<br>_You'll need to replace the example values for "email" and "password" with valid login details for your Google Account and for "website" with a valid URL for a site registered in your GWT account._
+In all examples all error handling is omitted.
+
+### Example 1 - Introduction
+
+In case you just need raw csv data:
 
 ```php
 <?php
-	include 'gwtdata.php';
-	try {
-		$email = "username@gmail.com";
-		$password = "******";
+    $client = Gwt_Client::create($email, $password)
+        ->setDaterange(
+            new DateTime('-10 day', new DateTimeZone('UTC')),
+            new DateTime('-9 day',  new DateTimeZone('UTC'))
+        )
+        ->setWebsite($website)
+    ;
 
-		# If hardcoded, don't forget trailing slash!
-		$website = "http://www.domain.com/";
-
-		$gdata = new GWTdata();
-		if($gdata->LogIn($email, $password) === true)
-		{
-			$gdata->DownloadCSV($website);
-		}
-	} catch (Exception $e) {
-		die($e->getMessage());
-	}
+    $csvData = $client->getTopQueriesTableData();
 ```
 
-This will download and save 9 CSV files to your hard disk:
+### Example 2 - Save CSV files for me
 
- - `./TOP_PAGES-www.domain.com-YYYYmmdd-H:i:s.csv`
- - `./TOP_QUERIES-www.domain.com-YYYYmmdd-H:i:s.csv`
- - `./CRAWL_ERRORS-www.domain.com-YYYYmmdd-H:i:s.csv`
- - `./CONTENT_ERRORS-www.domain.com-YYYYmmdd-H:i:s.csv`
- - `./CONTENT_KEYWORDS-www.domain.com-YYYYmmdd-H:i:s.csv`
- - `./LATEST_BACKLINKS-www.domain.com-YYYYmmdd-H:i:s.csv`
- - `./INTERNAL_LINKS-www.domain.com-YYYYmmdd-H:i:s.csv`
- - `./EXTERNAL_LINKS-www.domain.com-YYYYmmdd-H:i:s.csv`
- - `./SOCIAL_ACTIVITY-www.domain.com-YYYYmmdd-H:i:s.csv`
-
-For an example how to limit the download to top search queries, or top pages etc. _only_, take a look at example 4.
-
-By default, the files will be saved to the same folder where you added the gwtdata.php (and run the script). However the `DownloadCSV()` method has a second optional parameter to adjust the savepath - see inline comments in gwtdata.php and/or 2nd example.
-
-### Example 2 - `GetSites()`
-
-To download CSV data for all domains that are registered in your Google Webmaster Tools Account and to save the downloaded files to an extra folder, the steps are as follows:
-
- - In the same folder where you added the gwtdata.php, create a folder named `csv`.
- - In the same folder where you added the gwtdata.php, create and run the following PHP script.<br>_You'll need to replace the example values for "email" and "password" with valid login details for your Google Account._
+Next example will fetch and save data for TOP_QUERIES to `www.domain.com/TOP_QUERIES-YYYYmmdd-YYYYmmdd.csv` in current folder:
 
 ```php
 <?php
-	include 'gwtdata.php';
-	try {
-		$email = "username@gmail.com";
-		$password = "******";
 
-		$gdata = new GWTdata();
-		if($gdata->LogIn($email, $password) === true)
-		{
-			$sites = $gdata->GetSites();
-			foreach($sites as $site)
-			{
-				$gdata->DownloadCSV($site, "./csv");
-			}
-		}
-	} catch (Exception $e) {
-		die($e->getMessage());
-	}
+    $client = Gwt_Client::create($email, $password)
+        ->setDaterange(
+            new DateTime('-10 day', new DateTimeZone('UTC')),
+            new DateTime('-9 day',  new DateTimeZone('UTC'))
+        )
+        ->setWebsite($website)
+        ->addProcessor(
+            Gwt_Processor_CsvWriter::factory(array(
+                'savePath'          => '.',
+                'dateFormat'        => 'Ymd',
+                'filenameTemplate'  => '{website}' . DIRECTORY_SEPARATOR . '{tableName}-{dateStart}-{dateEnd}.csv',
+            ))
+        )
+    ;
 ```
+Take note, it will try to create all required directories, but by default it will created with 0777. Usually it is not what you want. You have few options here:
+- use [umask()][2]
+- create directories by yourself
 
-This will download 8 CSV files for each domain that is registered in your Google Webmaster Tools Account and save them to the csv folder.
+### Example 3 - I want clean data!
 
-### Example 3 - `GetDownloadedFiles()`
-
-Same as example two, but using the `GetDownloadedFiles()` method to get feedback what files have been saved to your hard disk (returning absolute paths).
+Still quite easy if we don't care about errors. BTW, processors can be chained:
 
 ```php
 <?php
-	include 'gwtdata.php';
-	try {
-		$email = "username@gmail.com";
-		$passwd = "******";
+    $client = Gwt_Client::create($email, $password)
+        ->setDaterange(
+            new DateTime('-10 day', new DateTimeZone('UTC')),
+            new DateTime('-9 day',  new DateTimeZone('UTC'))
+        )
+        ->setWebsite($website)
+        ->addProcessor(Gwt_Processor_Array::factory())
+        ->addProcessor(
+            Gwt_Processor_ArrayFilter::factory(array(
+                'columnNamesToRemove'   => array('Change'),
+                'columnKeysToRemove'    => array(5),
+            ))
+        )
+    ;
 
-		$gdata = new GWTdata();
-		if($gdata->LogIn($email, $passwd) === true)
-		{
-			$sites = $gdata->GetSites();
-			foreach($sites as $site)
-			{
-				$gdata->DownloadCSV($site, "./csv");
-			}
-
-			$files = $gdata->GetDownloadedFiles();
-			foreach($files as $file)
-			{
-				print "Saved $file\n";
-			}
-		}
-	} catch (Exception $e) {
-		die($e->getMessage());
-	}
+    list($fieldNames, $data) = $client->getTopQueriesTableData();
 ```
 
-### Example 4 - `SetTables()`
+More details and examples you can find in `examples` folder.
 
-To download CSV data for a single domain name of choice and top search query data _only_, the steps are as follows:
-
- - In the same folder where you added the gwtdata.php, create and run the following PHP script.<br>_You'll need to replace the example values for "email" and "password" with valid login details for your Google Account and for "website" with a valid URL for a site registered in your GWT account._
-
-```php
-<?php
-	include 'gwtdata.php';
-	try {
-		$email = "username@gmail.com";
-		$password = "******";
-
-		# If hardcoded, don't forget trailing slash!
-		$website = "http://www.domain.com/";
-
-		# Valid values are "TOP_PAGES", "TOP_QUERIES", "CRAWL_ERRORS",
-		# "CONTENT_ERRORS", "CONTENT_KEYWORDS", "INTERNAL_LINKS",
-		# "EXTERNAL_LINKS", "SOCIAL_ACTIVITY", and "LATEST_BACKLINKS".
-		$tables = array("TOP_QUERIES");
-
-		$gdata = new GWTdata();
-		if($gdata->LogIn($email, $password) === true)
-		{
-			$gdata->SetTables($tables);
-			$gdata->DownloadCSV($website);
-		}
-	} catch (Exception $e) {
-		die($e->getMessage());
-	}
-```
-
-This will download and save one file only: `./TOP_QUERIES-www.domain.com-Ymd-H:i:s.csv`
-
-### Example 5 - `SetDaterange()`
-
-To download CSV data for all domains that are registered in your Google Webmaster Tools Account and for a specific date range _only_, the steps are as follows:
-
- - In the same folder where you added the gwtdata.php, create and run the following PHP script.<br>_You'll need to replace the example values for "email" and "password" with valid login details for your Google Account._
-
-```php
-<?php
-	include 'gwtdata.php';
-	try {
-		$email = "username@gmail.com";
-		$password = "******";
-
-		# Dates must be in valid ISO 8601 format.
-		$daterange = array("2012-01-10", "2012-01-12");
-
-		$gdata = new GWTdata();
-		if($gdata->LogIn($email, $password) === true)
-		{
-			$gdata->SetDaterange($daterange);
-
-			$sites = $gdata->GetSites();
-			foreach($sites as $site)
-			{
-				$gdata->DownloadCSV($site);
-			}
-		}
-	} catch (Exception $e) {
-		die($e->getMessage());
-	}
-```
-
-This will download 9 CSV files (see example #1) for each domain that is registered in your Google Webmaster Tools Account containing data for the specified date range.
-
-### Example 6 - `SetLanguage()`
-
-To download data for all domains that are registered in your Google Webmaster Tools Account  and top search query data _only_ and for a specific date range _only_ and you want to use a custom language for the CSV headline, the steps are as follows:
-
- - In the same folder where you added the gwtdata.php, create and run the following PHP script.<br>_You'll need to replace the example values for "email" and "password" with valid login details for your Google Account._
-
-```php
-<?php
-	include 'gwtdata.php';
-	try {
-		$email = "eyecatchup@gmail.com";
-		$passwd = "******";
-
-		# Language must be set as valid ISO 639-1 language code.
-		$language = "de";
-
-		# Dates must be in valid ISO 8601 format.
-		$daterange = array("2012-01-01", "2012-01-02");
-
-		# Valid values are "TOP_PAGES", "TOP_QUERIES", "CRAWL_ERRORS",
-		# "CONTENT_ERRORS", "CONTENT_KEYWORDS", "INTERNAL_LINKS",
-		# "EXTERNAL_LINKS", "SOCIAL_ACTIVITY" and "LATEST_BACKLINKS".
-		$tables = array("TOP_QUERIES");
-
-		$gdata = new GWTdata();
-		if($gdata->LogIn($email, $passwd) === true)
-		{
-			$gdata->SetLanguage($language);
-			$gdata->SetDaterange($daterange);
-			$gdata->SetTables($tables);
-
-			$sites = $gdata->GetSites();
-			foreach($sites as $site)
-			{
-				$gdata->DownloadCSV($site);
-			}
-		}
-	} catch (Exception $e) {
-		die($e->getMessage());
-	}
-```
-
-This will download one CSV file for each domain that is registered in your Google Webmaster Tools Account containing top queries data for the specified date range and with a german headline.
-
-That's it.
+[1]: http://getcomposer.org/
+[2]: http://php.net/manual/en/function.umask.php

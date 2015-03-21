@@ -2,31 +2,27 @@
 
 include '../src/Gwt/Client.php';
 
-try {
-    $email = 'username@gmail.com';
-    $passwd = '******';
+// load config values
+include 'config.sample.php';
 
+try {
     # Language must be set as valid ISO 639-1 language code.
     $language = 'de';
 
-    # Valid values are 'TOP_PAGES', 'TOP_QUERIES', 'CRAWL_ERRORS',
-    # 'CONTENT_ERRORS', 'CONTENT_KEYWORDS', 'INTERNAL_LINKS',
-    # 'EXTERNAL_LINKS' and 'SOCIAL_ACTIVITY'.
-    $tables = array('TOP_QUERIES');
-
-    $gdata = Gwt_Client::create($email, $passwd)
+    $data = Gwt_Client::create($email, $password)
         ->setLanguage($language)
         ->setDaterange(
-            DateTime::createFromFormat('Y-m-d', '2012-01-10'),
-            DateTime::createFromFormat('Y-m-d', '2012-01-12')
+            new DateTime('-10 day', new DateTimeZone('UTC')),
+            new DateTime('-9 day',  new DateTimeZone('UTC'))
         )
-        ->setTables($tables)
+        ->setWebsite($website)
+        ->getTopQueriesTableData($tables)
     ;
 
-    $sites = $gdata->getSites();
-    foreach($sites as $site) {
-        $gdata->downloadCSV($site);
-    }
+    $rows = str_getcsv($data, "\n");
+    echo $rows[0], "\n";
+    echo $rows[1], "\n";
+    echo $rows[2], "\n";
 } catch (Exception $e) {
     die($e->getMessage());
 }

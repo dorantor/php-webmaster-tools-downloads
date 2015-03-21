@@ -26,6 +26,7 @@ try {
             'filenameTemplate'  => '{website}' . DIRECTORY_SEPARATOR . '{tableName}-{dateStart}-{dateEnd}.csv',
         ))
     );
+
     foreach ($sites as $site => $siteOptions) {
         echo "Processing {$site} \n";
 

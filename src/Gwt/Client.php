@@ -65,14 +65,6 @@ class Gwt_Client
     protected $_sites = null;
 
     /**
-     * Tables to download
-     *
-     * @deprecated
-     * @var array
-     */
-    public $_tables;
-
-    /**
      * Date for start of date range
      *
      * @var DateTime

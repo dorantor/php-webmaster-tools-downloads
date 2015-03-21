@@ -57,7 +57,7 @@ abstract class Gwt_Processor_ProcessorAbstract
      * @param array $params
      * @return static
      */
-    public static function factory(array $params)
+    public static function factory(array $params = array())
     {
         $processor = new static();
         foreach ($params as $param => $value) {

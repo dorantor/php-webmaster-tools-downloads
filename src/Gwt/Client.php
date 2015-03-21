@@ -86,6 +86,13 @@ class Gwt_Client
     private $_auth = false;
 
     /**
+     * List of processors
+     *
+     * @var array
+     */
+    private $_processors = array();
+
+    /**
      * Constructor
      * It would be better to keep constructor free of any params
      *

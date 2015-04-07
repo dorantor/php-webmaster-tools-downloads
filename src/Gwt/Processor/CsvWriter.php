@@ -180,7 +180,6 @@ class Gwt_Processor_CsvWriter
      * @param string $data      Downloaded CSV data
      * @param string $finalName path with target filename
      * @return bool
-     * @todo should throw specific exceptions
      */
     private function saveData($data, $finalName)
     {
